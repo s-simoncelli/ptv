@@ -50,6 +50,10 @@ classdef syncVideos
 %      lagTracking    - Struct array used by the tracking alghoritm
 %        
 %
+%   obj = PTV.syncVideos(...) provides the following public methods:
+%
+%      toStruct       - Convert class properties to a structure variable
+%
 %AUTHOR: Stefano Simoncelli <simoncelli@igb-berlin.de>
 
 
@@ -162,6 +166,10 @@ classdef syncVideos
             this.fileList1 = this.loadFiles(this.videoSet1, this.videoFileExtension);
             this.fileList2 = this.loadFiles(this.videoSet2, this.videoFileExtension);
              
+            if(isempty(this.fileList1) || isempty(this.fileList2))
+                error('Cannot file files in ''videoSet1'' or ''videoSet2''');
+            end
+            
             %% Collect total video frames
             this.totalVideos = length(this.fileList1);
       
