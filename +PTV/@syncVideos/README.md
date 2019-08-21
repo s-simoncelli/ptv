@@ -12,6 +12,7 @@ or
 anytime in the MATLAB Command Window to recall the following documentation.
 
 # Usage
+ ```javascript
     pathToFrames = '/path/to/images';
     videoSet1 = '/path/to/files/in/first/set';
     videoSet2 = '/path/to/files/in/second/set';
@@ -20,6 +21,7 @@ anytime in the MATLAB Command Window to recall the following documentation.
     obj = PTV.syncVideos(videoSet1, videoSet2, mexopencvPath);
     obj = PTV.syncVideos(..., 'audioWindowSize', 48000*50);
     obj = PTV.syncVideos(..., 'frameStep', 300);
+```
 
 `obj = PTV.syncVideos(..., Name, Value)` specifies additional name-value pairs described below:
 
