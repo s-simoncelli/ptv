@@ -47,6 +47,15 @@ classdef syncVideos
 %      audioSamplingFrequency  - The video frame rate
 %      totalAudioSamples       - Total audio samples
 %      lag            - The lag output table with D, L, L_tilde and Tau
+%               * time: time from left video
+%               * F1: synced frame from left video
+%               * F2:  synced frame from right video
+%               * audioStart: first audio sample index used for correlation
+%               * audioEnd: last audio sample index used for correlation
+%               * D: audio delay
+%               * L: video delay
+%               * L_tilde: rounded video delay
+%               * tau: L_tilde-l
 %      lagMessage     - The message about lag
 %      lagTracking    - Struct array used by the tracking alghoritm
 %        
@@ -300,8 +309,8 @@ classdef syncVideos
                     this.lag(k).F2 = FPrime + abs(this.lag(k).L_tilde);
                 end
                 
-                this.lag(k).AudioStart = iStart;
-                this.lag(k).AudioEnd = iEnd;
+                this.lag(k).audioStart = iStart;
+                this.lag(k).audioEnd = iEnd;
                 
                 FPrime = FPrime + this.frameStep;
                 APrime = APrime + this.frameStep/this.frameRate*this.audioSamplingFrequency;
@@ -341,7 +350,7 @@ classdef syncVideos
             close(w);
 
             this.lag = struct2table(this.lag);
-            this.lag = this.lag(:, {'time', 'F1', 'F2', 'AudioStart', 'AudioEnd', 'D', 'L', 'L_tilde', 'tau'});
+            this.lag = this.lag(:, {'time', 'F1', 'F2', 'audioStart', 'audioEnd', 'D', 'L', 'L_tilde', 'tau'});
         end
         
         % Convert class properties to a structure variable.
