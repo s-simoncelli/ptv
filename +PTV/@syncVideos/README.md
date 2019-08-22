@@ -45,13 +45,15 @@ anytime in the MATLAB Command Window to recall the following documentation.
  - **lagMessage**     - The message about lag
  - **lagTracking**    - Struct array used by the tracking alghoritm
 
-Once the audio tracks have been read, the program plot the first chunk of synchronised tracks
+Once the audio tracks have been read, the program plots the first chunk of synchronised audio tracks:
 
 ![alt text](./audio_signals.png)
 
-It then proceed estimating the audio delay for the frames
+It then proceeds estimating the audio delay for the frames
 
 ![alt text](./getting_lag.png)
+
+The output is stored in `obj.lag`.
 
 
  # Example

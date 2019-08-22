@@ -102,9 +102,6 @@ classdef syncVideos
         
         % message about lag
         lagMessage
-        
-        % struct array for tracking
-        lagTracking
     end
     
     properties (Access = private)
@@ -149,6 +146,9 @@ classdef syncVideos
         
         % constant lag assumed during tracking
         constantVideoLag
+        
+        % struct array for tracking
+        lagTracking
     end
     
     methods
