@@ -337,10 +337,6 @@ classdef syncVideos
                 
                 timeTaken = nanmean([timeTaken toc]);
                 k = k + 1;
-                
-                if(k > 3)
-                    break;
-                end
             end
             close(w);
 

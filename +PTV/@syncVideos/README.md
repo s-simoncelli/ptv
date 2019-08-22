@@ -41,6 +41,7 @@ anytime in the MATLAB Command Window to recall the following documentation.
  - **totalFramesCamera1**      - The total frames in 1st set
  - **totalFramesCamera2**      - The total frames in 2nd set
  - **audioSamplingFrequency**  - The video frame rate
+ - **totalAudioSamples**  - Total audio samples
  - **lag**            - The lag output table with *D*, *L*, *L_tilde* and *Tau*
  - **lagMessage**     - The message about lag
  - **lagTracking**    - Struct array used by the tracking alghoritm
@@ -55,7 +56,7 @@ It then proceeds estimating the audio delay for the frames
 
 The output is stored in `obj.lag`.
 
-
+te
  # Example
  ```javascript
     clc; clear; close all;
