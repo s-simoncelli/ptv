@@ -297,11 +297,7 @@ classdef syncVideos
 
                 this.lag(k).D = tmp; % delay in audio frmaes
                 this.lag(k).L = tmp/this.audioSamplingFrequency*this.frameRate;
-
-                % keep this constant. In the post-processing phase, the
-                % Eqs. envolving Tau are written using the initial delay
-                this.lag(k).L_tilde = this.constantVideoLag.frames;
-                % this.lag(k).L_tilde = round(this.lag(k).L);
+                this.lag(k).L_tilde = round(this.lag(k).L);
                 this.lag(k).tau = this.lag(k).L_tilde - this.lag(k).L;
                 k = k + 1;
                 
