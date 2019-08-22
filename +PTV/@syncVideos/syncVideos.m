@@ -45,6 +45,7 @@ classdef syncVideos
 %      totalFramesCamera1      - The total frames in 1st set
 %      totalFramesCamera2      - The total frames in 2nd set
 %      audioSamplingFrequency  - The video frame rate
+%      totalAudioSamples       - Total audio samples
 %      lag            - The lag output table with D, L, L_tilde and Tau
 %      lagMessage     - The message about lag
 %      lagTracking    - Struct array used by the tracking alghoritm
@@ -102,6 +103,9 @@ classdef syncVideos
         
         % message about lag
         lagMessage
+        
+        % struct array for tracking
+        lagTracking
     end
     
     properties (Access = private)
@@ -120,8 +124,8 @@ classdef syncVideos
         % time vector
         time
         
-        % vector of audio samples to process
-        audioSamples
+        % total audio samples to process
+        totalAudioSamples
         
         % time vector for audio
         audioTime
@@ -146,9 +150,6 @@ classdef syncVideos
         
         % constant lag assumed during tracking
         constantVideoLag
-        
-        % struct array for tracking
-        lagTracking
     end
     
     methods
@@ -190,122 +191,161 @@ classdef syncVideos
 
             this.totalFramesCamera1 = sum(this.framesSet1);
             this.totalFramesCamera2 = sum(this.framesSet2);
-
-            %% Get frames to process
-            totalSamples = min([this.totalFramesCamera1 this.totalFramesCamera2]);
-            this.frames = 1:this.frameStep:totalSamples;
-            this.totalSamples = length(this.frames);
+            this.totalSamples = min([this.totalFramesCamera1 this.totalFramesCamera2]);
 
             %% Collect audio data
-            this.audio1 = [];
-            this.audio2 = [];
-            audioChannel = 1; % use 1st track in stereo
-            timeTaken = 25;
-            f = waitbar(0, 'Please wait...');
-            for v=1:this.totalVideos
-                tic;
-                leftTime = (this.totalVideos-v+1)*timeTaken;
-                waitbar((v-1)/this.totalVideos, f, ...
-                    sprintf('Collecting audio tracks from video %d/%d - Left ~%.2f secs', ...
-                    v, this.totalVideos, leftTime));
-                audioTmp1 = audioread(this.fileList1{v}.fullFile);
-                audioTmp2 = audioread(this.fileList2{v}.fullFile);
+            a1 = fullfile(this.videoSet1, 'audioData.mat');
+            a2 = fullfile(this.videoSet2, 'audioData.mat');
+            if(~exist(a1, 'file') || ~exist(a2, 'file'))
+                this.audio1 = [];
+                this.audio2 = [];
+                audioChannel = 1; % use 1st track in stereo
+                timeTaken = 25;
+                f = waitbar(0, 'Please wait...');
+                for v=1:this.totalVideos
+                    tic;
+                    leftTime = (this.totalVideos-v+1)*timeTaken;
+                    waitbar(v/this.totalVideos, f, ...
+                        sprintf('Collecting audio tracks from video %d/%d - Left ~%.2f secs', ...
+                        v, this.totalVideos, leftTime));
+                    audioTmp1 = audioread(this.fileList1{v}.fullFile);
+                    audioTmp2 = audioread(this.fileList2{v}.fullFile);
 
-                this.audio1 = [this.audio1; audioTmp1(:, audioChannel)];
-                this.audio2 = [this.audio2; audioTmp2(:, audioChannel)];
-                timeTaken = toc; 
-            end
-            close(f);
-            this.audioSamples = 1:min([length(this.audio1) length(this.audio2)]);
-            this.audioSamplingFrequency = 48*10^3;
+                    this.audio1 = [this.audio1; audioTmp1(:, audioChannel)];
+                    this.audio2 = [this.audio2; audioTmp2(:, audioChannel)];
+                    timeTaken = toc; 
+                end
+                % Export files
+                audioTrack1 = this.audio1;
+                save(fullfile(this.videoSet1, 'audioData.mat'), 'audioTrack1');
+                audioTrack2 = this.audio2;
+                save(fullfile(this.videoSet2, 'audioData.mat'), 'audioTrack2');
 
-            %% General lag info 
-            range = 1:this.audioWindowSize;
-            this.audio1Sample = this.audio1(range);
-            this.audio2Sample = this.audio2(range);
-
-            [this.audio2SampleShifted, this.audio1SampleShifted, delay] = ...
-                alignsignals(this.audio2Sample, this.audio1Sample);
-    
-            delay = delay + 1; % next point is the correct one
-            audioTimeDelay = delay/this.audioSamplingFrequency; % to secs
-            
-            % video is sampled at a lower rate than audio, this introduces a small sync 
-            % error. Get the closest previous or next frame to reduce this by rounding
-            this.constantVideoLag.rawFrames = audioTimeDelay*this.frameRate;
-            this.constantVideoLag.frames = round(this.constantVideoLag.rawFrames);
-            this.constantVideoLag.time = this.constantVideoLag.frames/this.frameRate;
-   
-            this.lagTracking = struct('startRightVideo', [], 'startLeftVideo', []);
-            if(delay > 0)
-                this.lagMessage = sprintf('Left video is advanced of %.3f secs (%d frames). Cut it at %.3f secs.', ...
-                    this.constantVideoLag.time, this.constantVideoLag.frames, this.constantVideoLag.time);
-
-                % chop left video during tracking
-                this.lagTracking.startRightVideo.time = 0;
-                this.lagTracking.startRightVideo.frame = 1;
-
-                this.lagTracking.startLeftVideo.time = this.constantVideoLag.time;
-                this.lagTracking.startLeftVideo.frame = this.constantVideoLag.frames;
-
+                close(f);
             else
-                this.lagMessage = sprintf('Right video is advanced of %.3f secs (%d frames). Cut it at %.3f secs.', ...
-                    -this.constantVideoLag.time, -this.constantVideoLag.frames, -this.constantVideoLag.time);
-
-                % chop right video during tracking
-                this.lagTracking.startRightVideo.time = -this.constantVideoLag.time;
-                this.lagTracking.startRightVideo.frame = -this.constantVideoLag.frames;
-
-                this.lagTracking.startLeftVideo.time = 0;
-                this.lagTracking.startLeftVideo.frame = 1;
+                fprintf('>> Loading audio tracks from file\n');
+                tmp = load(a1);
+                this.audio1 = tmp.audioTrack1;
+                
+                tmp = load(a2);
+                this.audio2 = tmp.audioTrack2;
             end
-            tmp = strsplit(this.lagMessage, ' Cut');
-            fprintf('>> %s\n', tmp{1});
             
-            %% Plot aligned signals from 1:this.audioWindowSize
-            this.plotAudioSummary();
+            this.totalAudioSamples = min([length(this.audio1) length(this.audio2)]);
+            this.audioSamplingFrequency = 48*10^3;
 
             %% Find delay for each frame in this.frames
             this.lag = [];
             k = 1; % if step ~= 1, k ~= f
             w = waitbar(0, 'Please wait...');
             timeTaken = 0;
-            for ff=1:this.totalSamples
+            % F1 vector
+%             this.frames = this.lagTracking.startLeftVideo.frame:this.frameStep:this.totalSamples;
+            
+            FPrime = 1; % index for video frame in 1st set
+            APrime = 1; % index for audio sample
+            this.lagTracking = struct('startRightVideo', [], 'startLeftVideo', []);
+            while(FPrime < this.totalSamples)
                 tic;
-                leftTime = (this.totalSamples-ff)*timeTaken;
-                f = this.frames(ff);
-                waitbar(ff/this.totalSamples, w, sprintf('Getting delay for frame %d/%d (%.1f%%) - Left %.2f mins',...
-                    f, this.frames(end), ff/this.totalSamples*100, minutes(seconds(leftTime))));
+                leftTime = (this.totalSamples-k)*timeTaken;
+                per = FPrime/this.totalSamples;
+                waitbar(per, w, sprintf('Getting delay for frame %d/%d (%.1f%%) - Left %.2f mins',...
+                    FPrime, this.totalSamples, per*100, minutes(seconds(leftTime))));
 
+                %% Get audio track range
                 % tv = f/fv; A = fa/tv = f*fa/fv = f*48*10^3/48 = f*10^3;
-                iStart = f*this.audioSamplingFrequency/this.frameRate;
-                iEnd = iStart+this.audioWindowSize-1;
+                iStart = APrime;
+                iEnd = APrime - 1 + this.audioWindowSize;
                 
-                if(iEnd > this.audioSamples(end))
+                if(iStart > this.totalAudioSamples)
                     % continue if the for the last sample the size is at
                     % least half the audioSamplingFrequency length
-                    if(iStart - this.audioSamples(end) > this.audioSamplingFrequency/2)
-                        iEnd = this.audioSamples(end);
+                    if(iStart - this.totalAudioSamples > this.audioSamplingFrequency/2)
+                        iEnd = this.totalAudioSamples;
                     else
                         break;
                     end
                 end
-                range = iStart:iEnd;
-                tmp = finddelay(this.audio2(range), this.audio1(range));       
-                this.lag(k).videoFrame = f;
-                this.lag(k).time = f/this.frameRate; 
+                
+                %% Get delay
+                this.audio1Sample = this.audio1(iStart:iEnd);
+                this.audio2Sample = this.audio2(iStart:iEnd);
+                [this.audio2SampleShifted, this.audio1SampleShifted, D] = ...
+                        alignsignals(this.audio2Sample, this.audio1Sample); 
+                    
+                %% Export
+                this.lag(k).time = FPrime/this.frameRate;
 
-                this.lag(k).D = tmp; % delay in audio frmaes
-                this.lag(k).L = tmp/this.audioSamplingFrequency*this.frameRate;
+                % delay in audio frames
+                this.lag(k).D = D; 
+                % delay in the video frames
+                this.lag(k).L = D/this.audioSamplingFrequency*this.frameRate;
+                
+                % with GoPros L_tilde is always constant. With Olympus
+                % Tough cameras, this may not be the case, due to the time 
+                % jump created by the camera reaches when the 4GB limit 
+                % on the video file is reached; when the new file is
+                % created, Tough cameras introduce a larger lag than
+                % the GoPros and L_tilde is not constant. To avoid error in
+                % the tracking it is important to use the rounded L.
                 this.lag(k).L_tilde = round(this.lag(k).L);
                 this.lag(k).tau = this.lag(k).L_tilde - this.lag(k).L;
+                
+                if(D > 0)
+                    this.lag(k).F1 = FPrime;
+                    this.lag(k).F2 = FPrime - this.lag(k).L_tilde;
+                else
+                    
+                    this.lag(k).F1 = FPrime;
+                    this.lag(k).F2 = FPrime + abs(this.lag(k).L_tilde);
+                end
+                
+                this.lag(k).AudioStart = iStart;
+                this.lag(k).AudioEnd = iEnd;
+                
+                FPrime = FPrime + this.frameStep;
+                APrime = APrime + this.frameStep/this.frameRate*this.audioSamplingFrequency;
+                
+                if(k == 1)
+                    if(D > 0)
+                        this.lagMessage = sprintf('Left video is advanced of %.3f secs (%d frames). Cut it at %.3f secs.', ...
+                            this.lag(k).time, this.lag(k).L_tilde, this.lag(k).time);
+
+                        % chop left video during tracking
+                        this.lagTracking.startRightVideo.time = 0;
+                        this.lagTracking.startRightVideo.frame = 1; % F2
+
+                        this.lagTracking.startLeftVideo.time = this.lag(k).time;
+                        this.lagTracking.startLeftVideo.frame = this.lag(k).L_tilde; % F1
+                    else
+                        this.lagMessage = sprintf('Right video is advanced of %.3f secs (%d frames). Cut it at %.3f secs.', ...
+                            -this.lag(k).time, -this.lag(k).L_tilde, -this.lag(k).time);
+
+                        % chop right video during tracking
+                        this.lagTracking.startRightVideo.time = -this.lag(k).time;
+                        this.lagTracking.startRightVideo.frame = -this.lag(k).L_tilde; % F2
+
+                        this.lagTracking.startLeftVideo.time = 0;
+                        this.lagTracking.startLeftVideo.frame = 1; % F1
+                    end
+                    D = strsplit(this.lagMessage, ' Cut');
+                    fprintf('>> %s\n', D{1});
+                    
+                    % Plot aligned signals from 1:this.audioWindowSize
+                    this.plotAudioSummary();
+                end
+                
+                timeTaken = nanmean([timeTaken toc]);
                 k = k + 1;
                 
-                timeTaken = nanmean([timeTaken toc]); 
+                if(k > 3)
+                    break;
+                end
             end
             close(w);
 
             this.lag = struct2table(this.lag);
+            this.lag = this.lag(:, {'time', 'F1', 'F2', 'AudioStart', 'AudioEnd', 'D', 'L', 'L_tilde', 'tau'});
         end
         
         % Convert class properties to a structure variable.
