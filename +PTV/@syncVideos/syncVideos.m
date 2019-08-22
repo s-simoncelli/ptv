@@ -264,7 +264,7 @@ classdef syncVideos
                 iStart = APrime;
                 iEnd = APrime - 1 + this.audioWindowSize;
                 
-                if(iStart > this.totalAudioSamples)
+                if(iEnd > this.totalAudioSamples)
                     % continue if the for the last sample the size is at
                     % least half the audioSamplingFrequency length
                     if(iStart - this.totalAudioSamples > this.audioSamplingFrequency/2)
