@@ -46,7 +46,7 @@ classdef syncVideos
 %      totalFramesCamera2      - The total frames in 2nd set
 %      audioSamplingFrequency  - The video frame rate
 %      totalAudioSamples       - Total audio samples
-%      lag            - The lag output table with D, L, L_tilde and Tau
+%      lag            - The lag output table with the following variables
 %               * time: time from left video
 %               * F1: synced frame from left video
 %               * F2:  synced frame from right video
@@ -245,18 +245,16 @@ classdef syncVideos
 
             %% Find delay for each frame in this.frames
             this.lag = [];
-            k = 1; % if step ~= 1, k ~= f
+            k = 1;
             w = waitbar(0, 'Please wait...');
             timeTaken = 0;
-            % F1 vector
-%             this.frames = this.lagTracking.startLeftVideo.frame:this.frameStep:this.totalSamples;
             
             FPrime = 1; % index for video frame in 1st set
             APrime = 1; % index for audio sample
             this.lagTracking = struct('startRightVideo', [], 'startLeftVideo', []);
             while(FPrime < this.totalSamples)
                 tic;
-                leftTime = (this.totalSamples-k)*timeTaken;
+                leftTime = (this.totalSamples-FPrime)*timeTaken;
                 per = FPrime/this.totalSamples;
                 waitbar(per, w, sprintf('Getting delay for frame %d/%d (%.1f%%) - Left %.2f mins',...
                     FPrime, this.totalSamples, per*100, minutes(seconds(leftTime))));
@@ -312,6 +310,7 @@ classdef syncVideos
                 this.lag(k).audioStart = iStart;
                 this.lag(k).audioEnd = iEnd;
                 
+                % update index for next step
                 FPrime = FPrime + this.frameStep;
                 APrime = APrime + this.frameStep/this.frameRate*this.audioSamplingFrequency;
                 
