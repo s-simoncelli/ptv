@@ -13,6 +13,7 @@ anytime in the MATLAB Command Window to recall the following documentation.
 
 # Usage
  ```javascript
+    % path to folder or to single video
     pathToFrames = '/path/to/images';
     videoSet1 = '/path/to/files/in/first/set';
     videoSet2 = '/path/to/files/in/second/set';
@@ -32,8 +33,8 @@ anytime in the MATLAB Command Window to recall the following documentation.
 `obj = PTV.syncVideos(...)` returns a *syncVideos* object containing the output of the lag estimation.
 
 # syncVideos properties
- - **videoSet1**      - Complete path to the folder containing the 1st set of video files
- - **videoSet2**      - Complete path to the folder containing the 2nd set of video files
+ - **videoSet1**      - Complete path to the folder containing the 1st set of video files or path to a video
+ - **videoSet2**      - Complete path to the folder containing the 2nd set of video files or path to a video
  - **frameRate**      - The video frame rate
  - **totalVideos**    - The total processed videos
  - **framesSet1**     - The number of frames in each video files from 1st set

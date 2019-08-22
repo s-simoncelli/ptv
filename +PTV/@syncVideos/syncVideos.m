@@ -2,6 +2,7 @@ classdef syncVideos
 %SYNCVIDEOS determines the video delay between two sets of video files
 %based on the analysis of the audio signals. Usage:
 %
+%  % path to folder or to single video
 %  videoSet1 = '/path/to/files/in/first/set';
 %  videoSet2 = '/path/to/files/in/second/set';
 %  mexopencvPath = '/path/to/opencv/mex/files';
@@ -36,8 +37,10 @@ classdef syncVideos
 %   obj = PTV.syncVideos(...) returns a track object containing the following 
 %   public properties:
 %
-%      videoSet1      - Complete path to the folder containing the 1st set of video files
-%      videoSet2      - Complete path to the folder containing the 2nd set of video files
+%      videoSet1      - Complete path to the folder containing the 1st set 
+%                       of video files or path to a video
+%      videoSet2      - Complete path to the folder containing the 2nd set
+%                       of video files or path to a video
 %      frameRate      - The video frame rate
 %      totalVideos    - The total processed videos
 %      framesSet1     - The number of frames in each video files from 1st set
@@ -173,9 +176,22 @@ classdef syncVideos
 
             addpath(this.mexopencvPath);
 
-            this.fileList1 = this.loadFiles(this.videoSet1, this.videoFileExtension);
-            this.fileList2 = this.loadFiles(this.videoSet2, this.videoFileExtension);
-             
+            if(contains(this.videoSet1, this.videoFileExtension))
+                this.fileList1{1}.fullFile = this.videoSet1;
+                this.fileList2{1}.fullFile = this.videoSet2;
+                
+                [fPath, fName] = fileparts(this.videoSet1);
+                this.fileList1{1}.fileName = sprintf('%s.%s', fName, this.videoFileExtension);
+                this.videoSet1 = fPath;
+                
+                [fPath, fName] = fileparts(this.videoSet2);
+                this.fileList2{1}.fileName = sprintf('%s.%s', fName, this.videoFileExtension);
+                this.videoSet2 = fPath;
+            else
+                this.fileList1 = this.loadFiles(this.videoSet1, this.videoFileExtension);
+                this.fileList2 = this.loadFiles(this.videoSet2, this.videoFileExtension);
+            end
+
             if(isempty(this.fileList1) || isempty(this.fileList2))
                 error('Cannot file files in ''videoSet1'' or ''videoSet2''');
             end
@@ -218,6 +234,7 @@ classdef syncVideos
                         sprintf('Collecting audio tracks from video %d/%d - Left ~%.2f secs', ...
                         v, this.totalVideos, leftTime));
                     audioTmp1 = audioread(this.fileList1{v}.fullFile);
+                    this.fileList2{v}.fullFile
                     audioTmp2 = audioread(this.fileList2{v}.fullFile);
 
                     this.audio1 = [this.audio1; audioTmp1(:, audioChannel)];
@@ -254,7 +271,7 @@ classdef syncVideos
             this.lagTracking = struct('startRightVideo', [], 'startLeftVideo', []);
             while(FPrime < this.totalSamples)
                 tic;
-                leftTime = (this.totalSamples/this.frameStep-FPrime)*timeTaken;
+                leftTime = (this.totalSamples-FPrime)*timeTaken;
                 per = FPrime/this.totalSamples;
                 waitbar(per, w, sprintf('Getting delay for frame %d/%d (%.1f%%) - Left %.2f mins',...
                     FPrime, this.totalSamples, per*100, minutes(seconds(leftTime))));
