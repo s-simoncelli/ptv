@@ -1,7 +1,7 @@
 # Introduction
 
-This MATLAB package performs the stereo camera system using the
-vision toolbox provided by MATLAB. Type
+This MATLAB package extracts the lag data between two non-synchronised video 
+streams. Type
 
     help PTV.syncVideos
 
@@ -12,7 +12,7 @@ or
 anytime in the MATLAB Command Window to recall the following documentation.
 
 # Usage
- ```javascript
+ ```matlab
     % path to folder or to single video
     pathToFrames = '/path/to/images';
     videoSet1 = '/path/to/files/in/first/set';
@@ -67,7 +67,7 @@ It then proceeds estimating the audio delay for the frames
 The output is stored in `obj.lag`.
 
  # Example
- ```javascript
+ ```matlab
     clc; clear; close all;
     delete(findall(0,'type','figure','tag','TMWWaitbar'));
 

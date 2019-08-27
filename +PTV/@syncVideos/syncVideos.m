@@ -47,7 +47,6 @@ classdef syncVideos
 %      framesSet2     - The number of frames in each video files from 2nd set
 %      totalFramesCamera1      - The total frames in 1st set
 %      totalFramesCamera2      - The total frames in 2nd set
-%      audioSamplingFrequency  - The video frame rate
 %      totalAudioSamples       - Total audio samples
 %      lag            - The lag output table with the following variables
 %               * time: time from left video
@@ -58,14 +57,27 @@ classdef syncVideos
 %               * D: audio delay
 %               * L: video delay
 %               * L_tilde: rounded video delay
-%               * tau: L_tilde-l
-%      lagMessage     - The message about lag
-%      lagTracking    - Struct array used by the tracking alghoritm
-%        
+%               * tau: L_tilde-L
+%      lagMessage     - Information message about lag (i.e. which video is
+%                       advanced or delayed)
+%      startLeftVideo  - Struct array containing information about frame
+%                        and timestamp when left video should start to be
+%                        in sync with the right video
+%      startRightVideo - Struct array containing information about frame
+%                        and timestamp when right video should start to be
+%                        in sync with the left video
 %
 %   obj = PTV.syncVideos(...) provides the following public methods:
 %
 %      toStruct       - Convert class properties to a structure variable
+%      interp         - In case 'frameStep' is not set to 1, interpolate 
+%                       linearly the 'lag' table data so that the frame
+%                       step for F1 is 1. Setting 'frameStep' to 1 may take
+%                       a long time to sync the videos. The method updates
+%                       this.lag with the new interpolated table.
+%      save           - Save the lag data to a MAT file to be used in the 
+%                       track algorithm. Specify the output file name as input
+%                       of the method.
 %
 %AUTHOR: Stefano Simoncelli <simoncelli@igb-berlin.de>
 
@@ -76,12 +88,6 @@ classdef syncVideos
         
         % complete path to the folder containing the 2nd set of video files
         videoSet2
-        
-        % path to the MEX files of openCV
-        mexopencvPath
-        
-        % Extension of the video files
-        videoFileExtension
         
         % video frame rate
         frameRate
@@ -104,9 +110,6 @@ classdef syncVideos
         % frame step to use in assessing the lag
         frameStep
         
-        % audio frame rate
-        audioSamplingFrequency
-        
         % number of audio samples to consider in the lag evaluation
         audioWindowSize
         
@@ -116,8 +119,19 @@ classdef syncVideos
         % message about lag
         lagMessage
         
-        % struct array for tracking
-        lagTracking
+        % first synced frame of right video with left video
+        startRightVideo
+        
+        % first synced frame of left video with right video
+        startLeftVideo
+    end
+    
+    properties (GetAccess = private, SetAccess = public)
+        % path to the MEX files of openCV
+        mexopencvPath
+        
+        % Extension of the video files
+        videoFileExtension
     end
     
     properties (Access = private)
@@ -158,10 +172,16 @@ classdef syncVideos
         audio1SampleShifted
         
         % shifted subsample of full audio tracks from 2nd set
-        audio2SampleShifted
+        audio2SampleShifted        
+        
+        % audio frame rate
+        audioSamplingFrequency
         
         % constant lag assumed during tracking
         constantVideoLag
+        
+        % table header in this.lag
+        lagHeader
     end
     
     methods
@@ -174,6 +194,8 @@ classdef syncVideos
                 this.videoFileExtension, this.frameStep, this.audioWindowSize] = ...
                     validateAndParseInputs(varargin{:}); 
 
+            this.lagHeader = {'time', 'F1', 'F2', 'audioStart', 'audioEnd', ...
+                'D', 'L', 'L_tilde', 'tau'};
             addpath(this.mexopencvPath);
 
             if(contains(this.videoSet1, this.videoFileExtension))
@@ -234,7 +256,6 @@ classdef syncVideos
                         sprintf('Collecting audio tracks from video %d/%d - Left ~%.2f secs', ...
                         v, this.totalVideos, leftTime));
                     audioTmp1 = audioread(this.fileList1{v}.fullFile);
-                    this.fileList2{v}.fullFile
                     audioTmp2 = audioread(this.fileList2{v}.fullFile);
 
                     this.audio1 = [this.audio1; audioTmp1(:, audioChannel)];
@@ -268,7 +289,6 @@ classdef syncVideos
             
             FPrime = 1; % index for video frame in 1st set
             APrime = 1; % index for audio sample
-            this.lagTracking = struct('startRightVideo', [], 'startLeftVideo', []);
             while(FPrime < this.totalSamples)
                 tic;
                 leftTime = (this.totalSamples-FPrime)*timeTaken;
@@ -316,12 +336,17 @@ classdef syncVideos
                 this.lag(k).tau = this.lag(k).L_tilde - this.lag(k).L;
                 
                 if(D > 0)
-                    this.lag(k).F1 = FPrime;
-                    this.lag(k).F2 = FPrime - this.lag(k).L_tilde;
+                    % Left video is advanced
+                    % FPrime = 1; L_tilde(1) = 47; F1(1) = L_tilde + FPrime - 1 = 47 + 1 -1 = 47;
+                    % F2(1)= F1(1) - L_tilde(1) + 1 = 47 - 47 + 1 = 1;
+                    this.lag(k).F1 = this.lag(k).L_tilde + FPrime - 1;
+                    this.lag(k).F2 = this.lag(k).F1 - this.lag(k).L_tilde + 1;
                 else
-                    
+                    % Left video is delayed
+                    % FPrime = 1; L_tilde(1) = -47; F1(1) = FPrime = 1; 
+                    % F2 (1) = F1(1) - L_tilde(1) - 1 = 1 + 47 - 1 = 47;
                     this.lag(k).F1 = FPrime;
-                    this.lag(k).F2 = FPrime + abs(this.lag(k).L_tilde);
+                    this.lag(k).F2 = this.lag(k).F1 - this.lag(k).L_tilde - 1;
                 end
                 
                 this.lag(k).audioStart = iStart;
@@ -337,21 +362,21 @@ classdef syncVideos
                             this.lag(k).time, this.lag(k).L_tilde, this.lag(k).time);
 
                         % chop left video during tracking
-                        this.lagTracking.startRightVideo.time = 0;
-                        this.lagTracking.startRightVideo.frame = 1; % F2
+                        this.startRightVideo.time = 0;
+                        this.startRightVideo.frame = 1; % F2
 
-                        this.lagTracking.startLeftVideo.time = this.lag(k).time;
-                        this.lagTracking.startLeftVideo.frame = this.lag(k).L_tilde; % F1
+                        this.startLeftVideo.time = this.lag(k).time;
+                        this.startLeftVideo.frame = this.lag(k).L_tilde; % F1
                     else
                         this.lagMessage = sprintf('Right video is advanced of %.3f secs (%d frames). Cut it at %.3f secs.', ...
                             -this.lag(k).time, -this.lag(k).L_tilde, -this.lag(k).time);
 
                         % chop right video during tracking
-                        this.lagTracking.startRightVideo.time = -this.lag(k).time;
-                        this.lagTracking.startRightVideo.frame = -this.lag(k).L_tilde; % F2
+                        this.startRightVideo.time = -this.lag(k).time;
+                        this.startRightVideo.frame = -this.lag(k).L_tilde; % F2
 
-                        this.lagTracking.startLeftVideo.time = 0;
-                        this.lagTracking.startLeftVideo.frame = 1; % F1
+                        this.startLeftVideo.time = 0;
+                        this.startLeftVideo.frame = 1; % F1
                     end
                     D = strsplit(this.lagMessage, ' Cut');
                     fprintf('>> %s\n', D{1});
@@ -362,11 +387,15 @@ classdef syncVideos
                 
                 timeTaken = nanmean([timeTaken toc]);
                 k = k + 1;
+                
+                if(k == 5)
+                    break;
+                end
             end
             close(w);
 
             this.lag = struct2table(this.lag);
-            this.lag = this.lag(:, {'time', 'F1', 'F2', 'audioStart', 'audioEnd', 'D', 'L', 'L_tilde', 'tau'});
+            this.lag = this.lag(:, this.lagHeader);
         end
         
         % Convert class properties to a structure variable.
@@ -376,6 +405,26 @@ classdef syncVideos
                 name = str{f};
                 s.(name) = this.(name);
             end
+        end
+        
+        function this = interp(this)
+            % linear interpolation
+            vector = this.lag.F1(1):this.lag.F1(end);
+            this.lag = table(...
+                interp1(this.lag.F1, this.lag.time, vector)', ...
+                vector', ...
+                interp1(this.lag.F1, this.lag.F2, vector)', ...
+                interp1(this.lag.F1, this.lag.D, vector)', ...
+                interp1(this.lag.F1, this.lag.L, vector)', ...
+                interp1(this.lag.F1, this.lag.L_tilde, vector)', ...
+                interp1(this.lag.F1, this.lag.tau, vector)', ...
+                'VariableNames', this.lagHeader([1:3 6:end]) ...
+            );
+        end
+        
+        function save(this, file)
+            out = this.toStruct();
+            save(file, '-struct', 'out');
         end
     end
      
