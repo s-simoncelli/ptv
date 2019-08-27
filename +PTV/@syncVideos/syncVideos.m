@@ -182,6 +182,9 @@ classdef syncVideos
         
         % table header in this.lag
         lagHeader
+        
+        % for interpolation (syncVideos.interp()) save original table
+        lagRaw
     end
     
     methods
@@ -406,6 +409,7 @@ classdef syncVideos
         function this = interp(this)
             % linear interpolation
             vector = this.lag.F1(1):this.lag.F1(end);
+            this.lagRaw = this.lag;
             this.lag = table(...
                 interp1(this.lag.F1, this.lag.time, vector)', ...
                 vector', ...
