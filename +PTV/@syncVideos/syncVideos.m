@@ -290,9 +290,7 @@ classdef syncVideos
             w = waitbar(0, 'Please wait...');
             timeTaken = 0;
             
-            FPrime = 1; % index for video frame in 1st set
-            APrime = 1; % index for audio sample
-            while(FPrime < this.totalSamples)
+            for FPrime=1:this.frameStep:this.totalSamples
                 tic;
                 leftTime = (this.totalSamples-FPrime)*timeTaken;
                 per = FPrime/this.totalSamples;
@@ -301,6 +299,7 @@ classdef syncVideos
 
                 %% Get audio track range
                 % tv = f/fv; A = fa/tv = f*fa/fv = f*48*10^3/48 = f*10^3;
+                APrime = floor(FPrime/this.frameRate*this.audioSamplingFrequency);
                 iStart = APrime;
                 iEnd = APrime - 1 + this.audioWindowSize;
                 
@@ -354,11 +353,7 @@ classdef syncVideos
                 
                 this.lag(k).audioStart = iStart;
                 this.lag(k).audioEnd = iEnd;
-                
-                % update index for next step
-                FPrime = FPrime + this.frameStep;
-                APrime = APrime + this.frameStep/this.frameRate*this.audioSamplingFrequency;
-                
+                                
                 if(k == 1)
                     if(D > 0)
                         this.lagMessage = sprintf('Left video is advanced of %.3f secs (%d frames). Cut it at %.3f secs.', ...
