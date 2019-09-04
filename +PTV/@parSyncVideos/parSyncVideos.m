@@ -129,7 +129,8 @@ classdef parSyncVideos
         % first synced frame of left video with right video
         startLeftVideo
         
-        % number of parallel workers to use
+        % for interpolation (syncVideos.interp()) save original table
+        lagRaw
     end
     
     properties (GetAccess = private, SetAccess = public)
@@ -138,6 +139,9 @@ classdef parSyncVideos
         
         % Extension of the video files
         videoFileExtension
+        
+        % number of parallel workers to use
+        workers
     end
     
     properties (Access = private)
@@ -188,9 +192,6 @@ classdef parSyncVideos
         
         % table header in this.lag
         lagHeader
-        
-        % for interpolation (syncVideos.interp()) save original table
-        lagRaw
     end
     
     methods
@@ -370,6 +371,7 @@ classdef parSyncVideos
             fprintf('>> Took %.2f mins\n', minutes(seconds(toc)));
             
             delete(listener);
+            close(h);
             delete(gcp('nocreate'));
             
             this.lag = table(lagTime, F1, F2, D, L, L_tilde, tau, ...
@@ -394,8 +396,6 @@ classdef parSyncVideos
         function this = interp(this)
             % linear interpolation
             vector = this.lag.F1(1):this.lag.F1(end);
-            L_tilde = NaN(length(vector), 1);
-            L_tilde(1:this.frameStep:end) = this.lag.L_tilde;
 
             this.lagRaw = this.lag;
             this.lag = table(...
@@ -404,9 +404,9 @@ classdef parSyncVideos
                 interp1(this.lag.F1, this.lag.F2, vector)', ...
                 interp1(this.lag.F1, this.lag.D, vector)', ...
                 interp1(this.lag.F1, this.lag.L, vector)', ...
-                fillmissing(L_tilde, 'previous'), ...
+                interp1(this.lag.F1, this.lag.L_tilde, vector)', ...
                 interp1(this.lag.F1, this.lag.tau, vector)', ...
-                'VariableNames', this.lagHeader([1:3 6:end]) ...
+                'VariableNames', this.lagHeader ...
             );
         end
         
