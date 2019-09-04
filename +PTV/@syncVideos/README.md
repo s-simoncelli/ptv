@@ -56,6 +56,12 @@ anytime in the MATLAB Command Window to recall the following documentation.
  - **lagMessage**     - The message about lag
  - **lagTracking**    - Struct array used by the tracking alghoritm
 
+`obj = PTV.syncVideos(...)` provides the following public methods:
+
+- **toStruct**        - Convert class properties to a structure variable
+- **interp**          - In case 'frameStep' is not set to 1, interpolate linearly the 'lag' table data so that the frame step for F1 is 1. Setting 'frameStep' to 1 may take a long time to sync the videos. The method updates `this.lag` with the new interpolated table.
+- **save**            - Save the lag data to a MAT file to be used in the track algorithm. Specify the output file name as input of the method.
+
 Once the audio tracks have been read, the program plots the first chunk of synchronised audio tracks:
 
 ![alt text](./audio_signals.png)
@@ -91,6 +97,6 @@ The output is stored in `obj.lag`.
     plot(obj.lag.time, obj.lag.L - obj.lag.L_tilde, 'k-');
 
     % Save
-    data = obj.toStruct();
-    save('syncData.mat', 'data');
+    obj = obj.interp();
+    obj.save('syncData.mat');
 ```

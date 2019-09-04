@@ -10,6 +10,7 @@ classdef parSyncVideos
 %  obj = PTV.syncVideos(videoSet1, videoSet2, mexopencvPath);
 %  obj = PTV.syncVideos(..., 'audioWindowSize', 48000*50);
 %  obj = PTV.syncVideos(..., 'frameStep', 300);
+%  obj = PTV.syncVideos(..., 'workers', 4);
 %
 %
 %  obj = PTV.syncVideos(..., Name, Value) specifies additional
@@ -32,6 +33,11 @@ classdef parSyncVideos
 %                           set this larger than 48000*60.
 %
 %                           Default: 48000*60
+%
+%    'workers'              Number of parallel workers to use. This depends
+%                           on the available cores on your CPU.
+%
+%                           Default: 2
 %   
 %
 %   obj = PTV.syncVideos(...) returns a track object containing the following 
@@ -48,17 +54,15 @@ classdef parSyncVideos
 %      totalFramesCamera1      - The total frames in 1st set
 %      totalFramesCamera2      - The total frames in 2nd set
 %      totalAudioSamples       - Total audio samples
-%      lag            - The lag output table with the following variables
-%               * time: time from left video
-%               * F1: synced frame from left video
-%               * F2:  synced frame from right video
-%               * audioStart: first audio sample index used for correlation
-%               * audioEnd: last audio sample index used for correlation
-%               * D: audio delay
-%               * L: video delay
-%               * L_tilde: rounded video delay
-%               * tau: L_tilde-L
-%      lagMessage     - Information message about lag (i.e. which video is
+%      lag             - The lag output table with the following variables
+%                           * time: time from left video
+%                           * F1: synced frame from left video
+%                           * F2:  synced frame from right video
+%                           * D: audio delay
+%                           * L: video delay
+%                           * L_tilde: rounded video delay
+%                           * tau: L_tilde-L
+%      lagMessage      - Information message about lag (i.e. which video is
 %                       advanced or delayed)
 %      startLeftVideo  - Struct array containing information about frame
 %                        and timestamp when left video should start to be
@@ -124,6 +128,8 @@ classdef parSyncVideos
         
         % first synced frame of left video with right video
         startLeftVideo
+        
+        % number of parallel workers to use
     end
     
     properties (GetAccess = private, SetAccess = public)
@@ -194,7 +200,8 @@ classdef parSyncVideos
         % obj = syncVideos();
         function this = parSyncVideos(varargin)            
             [this.videoSet1, this.videoSet2, this.mexopencvPath, ...
-                this.videoFileExtension, this.frameStep, this.audioWindowSize] = ...
+                this.videoFileExtension, this.frameStep, this.audioWindowSize, ...
+                this.workers] = ...
                     validateAndParseInputs(varargin{:}); 
 
             this.lagHeader = {'time', 'F1', 'F2', 'D', 'L', 'L_tilde', 'tau'};
@@ -257,7 +264,7 @@ classdef parSyncVideos
                     waitbar(v/this.totalVideos, f, ...
                         sprintf('Collecting audio tracks from video %d/%d - Left ~%.2f secs', ...
                         v, this.totalVideos, leftTime));
-                    audioTmp1 = audioread(this.fileList1{v}.fullFile);
+                    [audioTmp1, Fs] = audioread(this.fileList1{v}.fullFile);
                     audioTmp2 = audioread(this.fileList2{v}.fullFile);
 
                     this.audio1 = [this.audio1; audioTmp1(:, audioChannel)];
@@ -266,9 +273,9 @@ classdef parSyncVideos
                 end
                 % Export files
                 audioTrack1 = this.audio1;
-                save(fullfile(this.videoSet1, 'audioData.mat'), 'audioTrack1');
+                save(fullfile(this.videoSet1, 'audioData.mat'), 'audioTrack1', 'Fs');
                 audioTrack2 = this.audio2;
-                save(fullfile(this.videoSet2, 'audioData.mat'), 'audioTrack2');
+                save(fullfile(this.videoSet2, 'audioData.mat'), 'audioTrack2', 'Fs');
 
                 close(f);
             else
@@ -281,10 +288,11 @@ classdef parSyncVideos
             end
             
             this.totalAudioSamples = min([length(this.audio1) length(this.audio2)]);
-            this.audioSamplingFrequency = 48*10^3;
+            this.audioSamplingFrequency = tmp.Fs;
 
             %% Find delay for video frames
-            h = waitbar(0, 'Please wait...');
+            fprintf('>> Processing data ...\n');
+            h = waitbar(0, 'Please wait ...');
             Q = parallel.pool.DataQueue;
             listener = Q.afterEach(@nUpdateWaitbar);
 
@@ -314,12 +322,11 @@ classdef parSyncVideos
             D = NaN(N, 1);
             L = D; L_tilde = D; tau = D; F1 = D; F2 = D; lagTime = D;
 
-            % Split audio track with cells. Each subtrack starts at each
-            % frame (every this.frameStep video frames) with length this.audioWindowSize
-            CAudio1 = arrayfun(@(i1, i2) this.audio1(i1:i2), iStart, iEnd, 'UniformOutput', false);
-            CAudio2 = arrayfun(@(i1, i2) this.audio2(i1:i2), iStart, iEnd, 'UniformOutput', false);
-
-            parpool(2);
+            A1 = this.audio1;
+            A2 = this.audio2;
+            
+            tic;
+            parpool(this.workers);
             parfor k=K
                 %% Get audio track range
                 % tv = f/fv; A = fa/tv = f*fa/fv = f*48*10^3/48 = f*10^3;
@@ -327,7 +334,8 @@ classdef parSyncVideos
                 Q.send(k);
                 
                 % Delay in audio samples
-                D(k) = finddelay(CAudio2{k}, CAudio1{k}); 
+                r = iStart(k):iEnd(k);
+                D(k) = finddelay(A2(r), A1(r)); 
                 
                 % Delay in the video frames
                 L(k) = D(k)/convRatio;
@@ -359,6 +367,7 @@ classdef parSyncVideos
                     F2(k) = F1(k) - L_tilde(k) - 1;
                 end
             end
+            fprintf('>> Took %.2f mins\n', minutes(seconds(toc)));
             
             delete(listener);
             delete(gcp('nocreate'));
@@ -419,7 +428,7 @@ end
 
 %% Parameter validation
 function [videoSet1, videoSet2, mexopencvPath, videoFileExtension, ...
-    frameStep, audioWindowSize] = validateAndParseInputs(varargin)
+    frameStep, audioWindowSize, workers] = validateAndParseInputs(varargin)
     % Validate and parse inputs
     narginchk(1, 9);
     
@@ -435,6 +444,8 @@ function [videoSet1, videoSet2, mexopencvPath, videoFileExtension, ...
         {'real', 'scalar', 'integer', 'nonnegative', 'nonzero', '>=', 1}));
     parser.addParameter('audioWindowSize', 48000*60, @(x)validateattributes(x, {'numeric'}, ...
         {'real', 'scalar', 'integer', 'nonnegative', 'nonzero', '>=', 1}));
+    parser.addParameter('workers', 2, @(x)validateattributes(x, {'numeric'}, ...
+        {'real', 'scalar', 'integer', 'nonnegative', 'nonzero', '>=', 0}, '<=', 6));
     
     parser.parse(varargin{:});
 
@@ -445,5 +456,6 @@ function [videoSet1, videoSet2, mexopencvPath, videoFileExtension, ...
     videoFileExtension = parser.Results.videoFileExtension;
     frameStep = parser.Results.frameStep; 
     audioWindowSize = parser.Results.audioWindowSize;
+    workers = parser.Results.workers;
 end
 
