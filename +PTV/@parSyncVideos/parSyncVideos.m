@@ -63,7 +63,7 @@ classdef parSyncVideos
 %                           * L_tilde: rounded video delay
 %                           * tau: L_tilde-L
 %      lagMessage      - Information message about lag (i.e. which video is
-%                       advanced or delayed)
+%                        advanced or delayed)
 %      startLeftVideo  - Struct array containing information about frame
 %                        and timestamp when left video should start to be
 %                        in sync with the right video
@@ -279,6 +279,7 @@ classdef parSyncVideos
                 save(fullfile(this.videoSet2, 'audioData.mat'), 'audioTrack2', 'Fs');
 
                 close(f);
+                this.audioSamplingFrequency = Fs;
             else
                 fprintf('>> Loading audio tracks from file\n');
                 tmp = load(a1);
@@ -286,10 +287,10 @@ classdef parSyncVideos
                 
                 tmp = load(a2);
                 this.audio2 = tmp.audioTrack2;
+                this.audioSamplingFrequency = tmp.Fs;
             end
             
             this.totalAudioSamples = min([length(this.audio1) length(this.audio2)]);
-            this.audioSamplingFrequency = tmp.Fs;
 
             %% Find delay for video frames
             fprintf('>> Processing data ...\n');
@@ -377,6 +378,29 @@ classdef parSyncVideos
             this.lag = table(lagTime, F1, F2, D, L, L_tilde, tau, ...
                 'VariableNames', this.lagHeader);
             
+            %% Additional data for tracking
+            if(this.lag.D(1))
+                this.lagMessage = sprintf('Left video is advanced of %.3f secs (%d frames). Cut it at %.3f secs.', ...
+                    this.lagtime(1), this.lag.L_tilde(1), this.lag.time(1));
+
+                % chop left video during tracking
+                this.startRightVideo.time = 0;
+                this.startRightVideo.frame = 1; % F2
+
+                this.startLeftVideo.time = this.lag.time(1);
+                this.startLeftVideo.frame = this.lag.L_tilde(1); % F1
+            else
+                this.lagMessage = sprintf('Right video is advanced of %.3f secs (%d frames). Cut it at %.3f secs.', ...
+                    -this.lag.time(1), -this.lag.L_tilde(1), -this.lag.time(1));
+
+                % chop right video during tracking
+                this.startRightVideo.time = -this.lag.time(1);
+                this.startRightVideo.frame = -this.lag.L_tilde(1); % F2
+
+                this.startLeftVideo.time = 0;
+                this.startLeftVideo.frame = 1; % F1
+            end
+
             function nUpdateWaitbar(~)
                 waitbar(p/N, h, sprintf('Computing lag %d/%d items (%.1f%%)', ...
                     p, N, p/N*100));
