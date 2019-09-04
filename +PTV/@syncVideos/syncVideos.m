@@ -282,7 +282,7 @@ classdef syncVideos
             end
             
             this.totalAudioSamples = min([length(this.audio1) length(this.audio2)]);
-            this.audioSamplingFrequency = Fs;
+            this.audioSamplingFrequency = tmp.Fs;
 
             %% Find delay for each frame in this.frames
             this.lag = [];
