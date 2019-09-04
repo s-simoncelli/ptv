@@ -258,7 +258,7 @@ classdef syncVideos
                     waitbar(v/this.totalVideos, f, ...
                         sprintf('Collecting audio tracks from video %d/%d - Left ~%.2f secs', ...
                         v, this.totalVideos, leftTime));
-                    audioTmp1 = audioread(this.fileList1{v}.fullFile);
+                    [audioTmp1, Fs] = audioread(this.fileList1{v}.fullFile);
                     audioTmp2 = audioread(this.fileList2{v}.fullFile);
 
                     this.audio1 = [this.audio1; audioTmp1(:, audioChannel)];
@@ -267,9 +267,9 @@ classdef syncVideos
                 end
                 % Export files
                 audioTrack1 = this.audio1;
-                save(fullfile(this.videoSet1, 'audioData.mat'), 'audioTrack1');
+                save(fullfile(this.videoSet1, 'audioData.mat'), 'audioTrack1', 'Fs');
                 audioTrack2 = this.audio2;
-                save(fullfile(this.videoSet2, 'audioData.mat'), 'audioTrack2');
+                save(fullfile(this.videoSet2, 'audioData.mat'), 'audioTrack2', 'Fs');
 
                 close(f);
             else
@@ -282,7 +282,7 @@ classdef syncVideos
             end
             
             this.totalAudioSamples = min([length(this.audio1) length(this.audio2)]);
-            this.audioSamplingFrequency = 48*10^3;
+            this.audioSamplingFrequency = Fs;
 
             %% Find delay for each frame in this.frames
             this.lag = [];
