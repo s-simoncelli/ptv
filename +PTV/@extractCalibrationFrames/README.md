@@ -39,6 +39,8 @@ anytime in the MATLAB Command Window to recall the following documentation.
 - **rotateLeftVideo** -  Whether to rotate the left video of 180deg. Default: false
 - **rotateRightVideo** -   Whether to rotate the right video of 180deg. Default: false
 
+The algorithm exports the specified frame from the left camera and the corresponding ones from the right camera. For each frame from the right camera, the previous and next frames are also extracted to correct the chequerboard coordinates during the calibration to ensure video synchronisation.
+
  # Example
  ```matlab
     clc; clear; close all;

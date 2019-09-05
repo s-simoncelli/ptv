@@ -58,7 +58,7 @@ classdef extractCalibrationFrames
         % Path where to export frames
         outPath
 
-        % Path to data from PTV.syncVideos
+        % Path to data from PTV.syncVideos or PTV.parSyncVideos
         lagParamsFile
         
         % Whether to rotate the right video of 180deg
