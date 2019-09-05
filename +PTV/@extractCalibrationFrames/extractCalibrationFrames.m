@@ -1,8 +1,8 @@
 classdef extractCalibrationFrames
 %EXTRACTCALIBRATIONFRAMES Extracts and saves frames for calibration. Usage:
 %
-%  videoSet1 = '/path/to/files/in/first/set';
-%  videoSet2 = '/path/to/files/in/second/set';
+%  leftVideo = '/path/to/video/from/left/camera';
+%  rightVideo = '/path/to/video/from/right/camera';
 %  mexopencvPath = '/path/to/opencv/mex/files';
 %  % path to exported file from PTV.syncVideos 
 %  lagParamsFile = '/path/to/delay/data';
@@ -10,8 +10,20 @@ classdef extractCalibrationFrames
 %  timestamps = [1.22 3.322 5.32];
 %  outPath = '/path/where/to/save/frames';
 %
-%  PTV.extractCalibrationFrames(videoSet1, videoSet2, ...
+%  PTV.extractCalibrationFrames(leftVideo, rightVideo, ...
 %         timestamps, lagParamsFile, mexOpencvPath, outPath);
+%
+%
+%  PTV.extractCalibrationFrames() requires the following parameters:
+%
+%   1) Path to video recorded with left camera.
+%   2) Path to video recorded with right camera.
+%   3) Path to mexopencv library.
+%   4) Lag data about video from left and right camera obtained 
+%       from PTV.syncVideos or PTV.parSyncVideo
+%   5) Timestamps in seconds of the frames from the left camera
+%       to be extracted from the videos
+%   6) Path where to save the frames.
 %
 %   lag = PTV.extractCalibrationFrames(..., Name, Value) specifies additional
 %    name-value pairs described below:

@@ -3,14 +3,20 @@ classdef syncVideos
 %based on the analysis of the audio signals. Usage:
 %
 %  % path to folder or to single video
-%  videoSet1 = '/path/to/files/in/first/set';
-%  videoSet2 = '/path/to/files/in/second/set';
+%  videoSetLeftCamera = '/path/to/videos/from/left/camera';
+%  videoSetRightCamera = '/path/to/videos/from/right/camera';
 %  mexopencvPath = '/path/to/opencv/mex/files';
 %
-%  obj = PTV.syncVideos(videoSet1, videoSet2, mexopencvPath);
+%  obj = PTV.syncVideos(videoSetLeftCamera, videoSetRightCamera, mexopencvPath);
 %  obj = PTV.syncVideos(..., 'audioWindowSize', 48000*50);
 %  obj = PTV.syncVideos(..., 'frameStep', 300);
 %
+%
+%  PTV.syncVideos() requires the following parameters:
+%
+%   1) Path to videos recorded with left camera.
+%   2) Path to videos recorded with right camera.
+%   3) Path to mexopencv library.
 %
 %  obj = PTV.syncVideos(..., Name, Value) specifies additional
 %    name-value pairs described below:

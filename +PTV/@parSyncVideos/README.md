@@ -15,14 +15,19 @@ anytime in the MATLAB Command Window to recall the following documentation.
  ```matlab
     % path to folder or to single video
     pathToFrames = '/path/to/images';
-    videoSet1 = '/path/to/files/in/first/set';
-    videoSet2 = '/path/to/files/in/second/set';
+    videoSetLeftCamera = '/path/to/videos/from/left/camera';
+    videoSetRightCamera = '/path/to/videos/from/right/camera';
     mexopencvPath = '/path/to/opencv/mex/files';
 
-    obj = PTV.parSyncVideos(videoSet1, videoSet2, mexopencvPath);
+    obj = PTV.parSyncVideos(videoSetLeftCamera, videoSetRightCamera, mexopencvPath);
     obj = PTV.parSyncVideos(..., 'audioWindowSize', 48000*50);
     obj = PTV.parSyncVideos(..., 'frameStep', 300);
 ```
+
+  `PTV.parSyncVideos()` requires the following parameters:
+   1) Path to videos recorded with left camera.
+   2) Path to videos recorded with right camera.
+   3) Path to mexopencv library.
 
 `obj = PTV.parSyncVideos(..., Name, Value)` specifies additional name-value pairs described below:
 
@@ -35,7 +40,7 @@ anytime in the MATLAB Command Window to recall the following documentation.
 `obj = PTV.parSyncVideos(...)` returns a *parSyncVideos* object containing the output of the lag estimation.
 
 # parSyncVideos properties
- - **videoSet1**      - Complete path to the folder containing the 1st set of video files or path to a video
+ - **videoSetLeftCamera**      - Complete path to the folder containing the 1st set of video files or path to a video
  - **videoSet2**      - Complete path to the folder containing the 2nd set of video files or path to a video
  - **frameRate**      - The video frame rate
  - **totalVideos**    - The total processed videos
@@ -66,24 +71,25 @@ Once the audio tracks have been read, the program plots the first chunk of synch
 
 ![alt text](./audio_signals.png)
 
-It then proceeds estimating the audio delay for the frames. The program shows a progress bar with the total number of samples/frame delay that have been processed.
+It then proceeds estimating the audio delay for the frames. The program shows a progress bar with the total number of samples/frames that have been processed. 
 
-The output is stored in `obj.lag`.
+The synchornised frame data are stored in `obj.lag`.
 
  # Example
  ```matlab
     clc; clear; close all;
     delete(findall(0,'type','figure','tag','TMWWaitbar'));
 
-    addpath('../../');
+    addpath('/path/to/ptv/package');
 
     import PTV.*
 
-    videoSet1 = '/Volumes/stereo_cameras/lake/deployment_1/left/';
-    videoSet2 = '/Volumes/stereo_cameras/lake/deployment_1/right/';
+    videoSetLeftCamera = '/Volumes/stereo_cameras/lake/deployment_1/left/';
+    videoSetRightCamera = '/Volumes/stereo_cameras/lake/deployment_1/right/';
     mexopencvPath  = '/Users/yourUser/Documents/MATLAB/mexopencv-d29007b';
 
-    obj = PTV.parSyncVideos(videoSet1, videoSet2, mexopencvPath, 'frameStep', 50);
+    obj = PTV.parSyncVideos(videoSetLeftCamera, videoSetRightCamera, mexopencvPath, ...     
+      'frameStep', 50, 'workers', 3);
 
     % Plot
     figure;

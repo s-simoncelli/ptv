@@ -1,19 +1,26 @@
 classdef parSyncVideos
-%SYNCVIDEOS determines the video delay between two sets of video files
+%PARSYNCVIDEOS determines the video delay between two sets of video files
 %based on the analysis of the audio signals. Usage:
 %
 %  % path to folder or to single video
-%  videoSet1 = '/path/to/files/in/first/set';
-%  videoSet2 = '/path/to/files/in/second/set';
+%  videoSetLeftCamera = '/path/to/videos/from/left/camera';
+%  videoSetRightCamera = '/path/to/videos/from/right/camera';
 %  mexopencvPath = '/path/to/opencv/mex/files';
 %
-%  obj = PTV.syncVideos(videoSet1, videoSet2, mexopencvPath);
-%  obj = PTV.syncVideos(..., 'audioWindowSize', 48000*50);
-%  obj = PTV.syncVideos(..., 'frameStep', 300);
-%  obj = PTV.syncVideos(..., 'workers', 4);
+%  obj = PTV.parSyncVideos(videoSetLeftCamera, videoSetRightCamera, mexopencvPath);
+%  obj = PTV.parSyncVideos(..., 'audioWindowSize', 48000*50);
+%  obj = PTV.parSyncVideos(..., 'frameStep', 300);
+%  obj = PTV.parSyncVideos(..., 'workers', 4);
 %
 %
-%  obj = PTV.syncVideos(..., Name, Value) specifies additional
+%  PTV.parSyncVideos() requires the following parameters:
+%
+%   1) Path to videos recorded with left camera.
+%   2) Path to videos recorded with right camera.
+%   3) Path to mexopencv library.
+%
+%
+%  obj = PTV.parSyncVideos(..., Name, Value) specifies additional
 %    name-value pairs described below:
 %
 %   'videoFileExtension'    Extension of the video files 
@@ -40,13 +47,13 @@ classdef parSyncVideos
 %                           Default: 2
 %   
 %
-%   obj = PTV.syncVideos(...) returns a track object containing the following 
+%   obj = PTV.parSyncVideos(...) returns a track object containing the following 
 %   public properties:
 %
-%      videoSet1      - Complete path to the folder containing the 1st set 
-%                       of video files or path to a video
-%      videoSet2      - Complete path to the folder containing the 2nd set
-%                       of video files or path to a video
+%      videoSetLeftCamera    - Complete path to the folder containing the 1st set 
+%                              of video files or path to a video
+%      videoSetRightCamer    - Complete path to the folder containing the 2nd set
+%                              of video files or path to a video
 %      frameRate      - The video frame rate
 %      totalVideos    - The total processed videos
 %      framesSet1     - The number of frames in each video files from 1st set
@@ -71,7 +78,7 @@ classdef parSyncVideos
 %                        and timestamp when right video should start to be
 %                        in sync with the left video
 %
-%   obj = PTV.syncVideos(...) provides the following public methods:
+%   obj = PTV.parSyncVideos(...) provides the following public methods:
 %
 %      toStruct       - Convert class properties to a structure variable
 %      interp         - In case 'frameStep' is not set to 1, interpolate 
@@ -129,7 +136,7 @@ classdef parSyncVideos
         % first synced frame of left video with right video
         startLeftVideo
         
-        % for interpolation (syncVideos.interp()) save original table
+        % for interpolation (parSyncVideos.interp()) save original table
         lagRaw
     end
     
@@ -198,7 +205,7 @@ classdef parSyncVideos
         %==================================================================
         % Constructor
         %==================================================================
-        % obj = syncVideos();
+        % obj = parSyncVideos();
         function this = parSyncVideos(varargin)            
             [this.videoSet1, this.videoSet2, this.mexopencvPath, ...
                 this.videoFileExtension, this.frameStep, this.audioWindowSize, ...
@@ -311,8 +318,7 @@ classdef parSyncVideos
             iStart = floor(FPrime/this.frameRate*this.audioSamplingFrequency);
             iEnd = iStart - 1 + this.audioWindowSize;
                 
-            % remove data exceeding audiot track length (usually for last
-            % frame)
+            % remove data exceeding audio track length
             I = iEnd > this.totalAudioSamples;
             iStart = iStart(~I);
             iEnd = iEnd(~I);
