@@ -132,6 +132,7 @@ classdef extractCalibrationFrames
                 f = waitbar(0, 'Please wait...');
                 meanTime = 0;
                 totalImages = length(this.getImagesAt);
+                imageProcessed = 0;
                 for imageNumber=1:totalImages
                     tic;
 
@@ -160,8 +161,6 @@ classdef extractCalibrationFrames
                     % check that the right frame index is associated with a
                     % left frame in the sync data. 
                     if(isempty(frameNumber.right))
-                        warning('Right frame #%d was skipped because the left frame is not present in the lag data', ...
-                            frameNumber.left, currentFrame);
                         % delete left frame
                         delete(fullfile(outPath1, frameFileName));
                         continue;
@@ -187,9 +186,11 @@ classdef extractCalibrationFrames
                     end
                     
                     meanTime = nanmean([meanTime; toc]);
+                    imageProcessed = imageProcessed + 1;
                 end
                 
-                fprintf('>> Extracted %d frames\n', imageNumber);
+                fprintf('>> Extracted %d frames\n', imageProcessed);
+                fprintf('>> Skipped %d frames\n', totalImages - imageProcessed);
                 close(f);
             else
                 fprintf('>> Skipped\n');
