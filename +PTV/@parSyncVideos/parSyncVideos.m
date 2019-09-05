@@ -387,7 +387,7 @@ classdef parSyncVideos
             %% Additional data for tracking
             if(this.lag.D(1))
                 this.lagMessage = sprintf('Left video is advanced of %.3f secs (%d frames). Cut it at %.3f secs.', ...
-                    this.lagtime(1), this.lag.L_tilde(1), this.lag.time(1));
+                    this.lag.time(1), this.lag.L_tilde(1), this.lag.time(1));
 
                 % chop left video during tracking
                 this.startRightVideo.time = 0;
