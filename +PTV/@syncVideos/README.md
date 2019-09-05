@@ -25,8 +25,8 @@ anytime in the MATLAB Command Window to recall the following documentation.
 ```
 
   `PTV.syncVideos()` requires the following parameters:
-   1) Path to videos recorded with left camera.
-   2) Path to videos recorded with right camera.
+   1) Path to a video  or a folder containing all videos recorded from left camera
+   2) Path to a video  or a folder containing all videos recorded from right camera
    3) Path to mexopencv library.
 
 `obj = PTV.syncVideos(..., Name, Value)` specifies additional name-value pairs described below:
