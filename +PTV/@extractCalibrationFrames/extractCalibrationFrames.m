@@ -157,6 +157,16 @@ classdef extractCalibrationFrames
                     
                     %% Right
                     frameNumber.right = this.getRightFrameIdx(frameNumber.left);
+                    % check that the right frame index is associated with a
+                    % left frame in the sync data. 
+                    if(isempty(frameNumber.right))
+                        warning('Right frame #%d was skipped because the left frame is not present in the lag data', ...
+                            frameNumber.left, currentFrame);
+                        % delete left frame
+                        delete(fullfile(outPath1, frameFileName));
+                        continue;
+                    end
+
                     % extract more frames for coordinate interpolation
                     frameRight = frameNumber.right + [-1 0 1];
                     l = {'-', '', '+'};
@@ -172,7 +182,7 @@ classdef extractCalibrationFrames
                         if(this.rotateRightVideo)
                             rightFrame = imrotate(rightFrame, 180);
                         end
-                        frameFileNameX = sprintf('f%d_%.0f%s.png', imageNumber, frameRight(2), l{frx})
+                        frameFileNameX = sprintf('f%d_%.0f%s.png', imageNumber, frameRight(2), l{frx});
                         imwrite(rightFrame, fullfile(outPath2, frameFileNameX), 'png');
                     end
                     

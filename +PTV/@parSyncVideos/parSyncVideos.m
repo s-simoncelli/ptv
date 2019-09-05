@@ -15,8 +15,10 @@ classdef parSyncVideos
 %
 %  PTV.parSyncVideos() requires the following parameters:
 %
-%   1) Path to videos recorded with left camera.
-%   2) Path to videos recorded with right camera.
+%   1) Path to a video  or a folder containing all videos recorded from 
+%      left camera
+%   2) Path to a video  or a folder containing all videos recorded from 
+%      right camera
 %   3) Path to mexopencv library.
 %
 %
@@ -94,12 +96,6 @@ classdef parSyncVideos
 
 
     properties (GetAccess = public, SetAccess = private)
-        % complete path to the folder containing the 1st set of video files
-        videoSet1
-        
-        % complete path to the folder containing the 2nd set of video files
-        videoSet2
-        
         % video frame rate
         frameRate
         
@@ -149,6 +145,12 @@ classdef parSyncVideos
         
         % number of parallel workers to use
         workers
+
+        % complete path to the folder containing the 1st set of video files
+        videoSet1
+        
+        % complete path to the folder containing the 2nd set of video files
+        videoSet2 
     end
     
     properties (Access = private)
