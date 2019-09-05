@@ -63,10 +63,11 @@ anytime in the MATLAB Command Window to recall the following documentation.
         % Interpolate the lag linearly
         data = obj.interp();
         
-        % save sync data so thay they may be used again
+        % save sync data so that they can be used again
         data.save(lagParamsFile);
     end
 
     %% Extract frames
-    PTV.extractCalibrationFrames(videoSet1, videoSet2, getImagesAt, lagParamsFile, ...mexOpencvPath, outPath);
+    PTV.extractCalibrationFrames(videoSet1, videoSet2, getImagesAt, lagParamsFile, ...
+    mexOpencvPath, outPath);
 ```

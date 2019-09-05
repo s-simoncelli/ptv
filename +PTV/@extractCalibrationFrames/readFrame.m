@@ -31,8 +31,7 @@ function [frame, isFrameValid] = readFrame(video, frameNumber)
     frame = video.read();
     if(isempty(frame))    
         isFrameValid = false;
-        warning('Frame %d is invalid', frameNumber);
-                       
+        warning('Frame %d is invalid', frameNumber);        
     end
 end
 

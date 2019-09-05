@@ -165,12 +165,14 @@ classdef extractCalibrationFrames
                         [rightFrame, rightValid] = this.readFrame(rightVideoObj, currentFrame);
                         if(~rightValid)
                             warning('Right frame #%d is invalid. Skipped', currentFrame);
+                            % delete left frame
+                            delete(fullfile(outPath1, frameFileName));
                             continue;
                         end
                         if(this.rotateRightVideo)
                             rightFrame = imrotate(rightFrame, 180);
                         end
-                        frameFileNameX = sprintf('f%d_%d%s.png', imageNumber, currentFrame, l{frx});
+                        frameFileNameX = sprintf('f%d_%.0f%s.png', imageNumber, frameRight(2), l{frx})
                         imwrite(rightFrame, fullfile(outPath2, frameFileNameX), 'png');
                     end
                     
