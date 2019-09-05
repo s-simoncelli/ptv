@@ -20,9 +20,9 @@ function [] = exportCorners(this, workspaceFile)
     corners.imageSize = this.imageSize;
     corners.totalFrames = this.totalFrames;
     corners.worldPoints = this.worldPoints;
-    corners.FramesPath = this.FramesPath;
-    corners.SquareSize = this.SquareSize;
-    corners.Name = this.Name;
+    corners.framesPath = this.framesPath;
+    corners.squareSize = this.squareSize;
+    corners.name = this.name;
 
     save(workspaceFile, 'corners');
     fprintf('>> Corners saved in ''%s''\n', workspaceFile);

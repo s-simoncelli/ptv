@@ -26,7 +26,7 @@ function this = detectCorners(this)
     
     % Generate world coordinates of the chequerboard keypoints. Each
     % pattern contains prod(this.boardSize-1) points
-    this.worldPoints = generateCheckerboardPoints(this.boardSize, this.SquareSize);
+    this.worldPoints = generateCheckerboardPoints(this.boardSize, this.squareSize);
     [mrows, ncols, ~] = size(imread(this.imagesLeftAll{1}));
     this.imageSize = [mrows ncols];
 end

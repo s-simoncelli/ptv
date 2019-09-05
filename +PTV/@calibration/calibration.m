@@ -19,22 +19,22 @@ classdef calibration
 %   obj = calibration(..., Name, Value) specifies additional
 %    name-value pairs described below:
 %
-%   'Name'                  Name of the calibration.
+%   'name'                  Name of the calibration.
 %
 %                           Default: 'cal'
 %
-%   'Exclude'               Frame IDs to exclude from the calibration set. For 
+%   'exclude'               Frame IDs to exclude from the calibration set. For 
 %                           example to exclude images 'f1' and 'f4', use [1
 %                           4]. This is useful to exclude frames with high
 %                           reprojection errors.
 %
 %                           Default: []
 %
-%   'SaveSummary'           Save plots with calibration results.
+%   'saveSummary'           Save plots with calibration results.
 %
 %                           Default: true
 %
-%   'CheckFrameNumber'      Frame number to use to verify the calibration (i.e
+%   'checkFrameNumber'      Frame number to use to verify the calibration (i.e
 %                           to compute the disparity and reconstruct the 3D
 %                           scene). You can also verify the calibration using a
 %                           frame pair not belonging to the calibration set
@@ -46,24 +46,24 @@ classdef calibration
 %                           have not been exluded with the 'Exclude'
 %                           setting.
 %
-%   'DisparityBlockSize':   Width of each square block whose pixels 
+%   'disparityBlockSize':   Width of each square block whose pixels 
 %                           are used for comparison between the images. 
 %
 %                           Default: 15. Max: 255. Min: 5.
 %
-%   'DisparityMax'          Maximum value of disparity. Run the calibration
+%   'disparityMax'          Maximum value of disparity. Run the calibration
 %                           at least once to measure the maximum distance
 %                           using the imtool from the stereo anaglyph.
 %
 %                           Default: 64. 
 %
-%   'DisparityContrastThreshold'   Acceptable range of contrast values.
+%   'disparityContrastThreshold'   Acceptable range of contrast values.
 %                                  Increasing this parameter results in
 %                                  fewer pixels being marked as unreliable. 
 %
 %                                  Default: 0.5. Max: 1. Min: 0. 
 %
-%   'DisparityUniquenessThreshold'  Minimum value of uniqueness. Increasing 
+%   'disparityUniquenessThreshold'  Minimum value of uniqueness. Increasing 
 %                                   this parameter results in the function 
 %                                   marking more pixels unreliable. When the 
 %                                   uniqueness value for a pixel is low, the 
@@ -80,16 +80,16 @@ classdef calibration
 %      ------------------------------------------------------
 %      imagesLeftAll  - Path to files from left camera
 %      imagesRightAll - Path to files from right camera
-% COMPLETE!!!
-%      imagesLeft     - Path to files from left camera used in the calibration set
-%      imagesRight    - Path to files from right camera used in the calibration set
 %      fileNamesAll   - File names in the path
 %      fileNames      - File names in the calibration set
 %
 %      Corner-detection output
 %      ------------------------------------------------------
-%      imagePoints   - Detected points in frames from both cameras. See detectCheckerboardPoints
-%FIXME
+%      imagePointsLeft   - Detected points in frames from left cameras. See detectCheckerboardPoints
+%      imagePointsRight  - Detected points in frames from right cameras.
+%                          These points have been fixed to ensure frame
+%                          synchronisation.
+%      imagePoints   - Pattern points used in the calibration.
 %      worldPoints   - Real world points of checkerboard. See generateCheckerboardPoints
 %      boardSize     - Number of rows and columns in checkerboard. See detectCheckerboardPoints
 %      imagesUsed    - Frames where the pattern was detected. See detectCheckerboardPoints
@@ -151,12 +151,6 @@ classdef calibration
         % Path to - files from right camera
         imagesRightAllMinus
         
-        % Path to files from left camera used for calibration
-        imagesLeft
-        
-        % Path to files from right camera for calibration
-        imagesRight
-        
         % File names in the path
         fileNamesAll
         
@@ -168,12 +162,6 @@ classdef calibration
 
         % Detected points in frames from right camera
         imagePointsRight
-
-        % Detected points in frames from right camera (+ frames)
-        imagePointsRightPlus
-
-        % Detected points in frames from right camera (- frames)
-        imagePointsRightMinus
 
         % Detected points from left cameras and fixed points from right camera
         imagePoints
@@ -246,41 +234,47 @@ classdef calibration
 
         % Data from PTV.syncVideos
         lagData
-    end
-    
-    properties (Access = public)
-        % Path where the frames are
-        FramesPath
-        
-        % Size of the checkeboard square in mm
-        SquareSize
 
         % Path to data from PTV.syncVideos or PTV.parSyncVideos
         lagParamsFile
         
+        % Save plots with calibration results
+        saveSummary
+
+        % Detected points in frames from right camera (+ frames)
+        imagePointsRightPlus
+
+        % Detected points in frames from right camera (- frames)
+        imagePointsRightMinus
+    end
+    
+    properties (Access = public)
+        % Path where the frames are
+        framesPath
+        
+        % Size of the checkeboard square in mm
+        squareSize
+        
         % Name of the calibration
-        Name
+        name
         
         % Frame IDs to exclude from the calibration set
-        Exclude
-        
-        % Save plots with calibration results
-        SaveSummary
+        exclude
         
         % Frame number to use to verify the calibration 
-        CheckFrameNumber
+        checkFrameNumber
         
         % Maximum value of disparity
-        DisparityMax
+        disparityMax
         
         % Width of each square block for the disparity calculation
-        DisparityBlockSize
+        disparityBlockSize
         
         % Acceptable range of contrast values for the disparity calculation
-        DisparityContrastThreshold
+        disparityContrastThreshold
         
         % Minimum value of uniqueness
-        DisparityUniquenessThreshold
+        disparityUniquenessThreshold
     end
     
     methods
@@ -294,10 +288,10 @@ classdef calibration
         % obj = calibration(..., 'CheckFrameNumber', int8(14));
         % obj = calibration(..., 'DisparityConfig', struct('method', 'SemiGlobal'));
         function this = calibration(varargin)            
-            [this.FramesPath, this.SquareSize, this.lagParamsFile, this.Name, this.Exclude, ...
-                this.SaveSummary, this.CheckFrameNumber, this.DisparityBlockSize, ...
-                this.DisparityContrastThreshold, this.DisparityUniquenessThreshold, ...
-                this.DisparityMax] = validateAndParseInputs(varargin{:}); 
+            [this.framesPath, this.squareSize, this.lagParamsFile, this.name, this.exclude, ...
+                this.saveSummary, this.checkFrameNumber, this.disparityBlockSize, ...
+                this.disparityContrastThreshold, this.disparityUniquenessThreshold, ...
+                this.disparityMax] = validateAndParseInputs(varargin{:}); 
 
             if(~exist(this.lagParamsFile, 'file'))
                 error('File ''%s'' does not exist', this.lagParamsFile);
@@ -305,12 +299,12 @@ classdef calibration
             this.lagData = load(this.lagParamsFile);
 
             % workspace names
-            pointsBaseFileName = sprintf('%s_vision_corners.mat', this.Name);
-            pointsFullName = fullfile(this.FramesPath, pointsBaseFileName);
+            pointsBaseFileName = sprintf('%s_corners.mat', this.name);
+            pointsFullName = fullfile(this.framesPath, pointsBaseFileName);
     
             % workspace names
-            calibrationBaseFileName = sprintf('%s_vision_data.mat', this.Name);
-            calibrationFullName = fullfile(this.FramesPath, calibrationBaseFileName);
+            calibrationBaseFileName = sprintf('%s_data.mat', this.name);
+            calibrationFullName = fullfile(this.framesPath, calibrationBaseFileName);
  
             if(~exist(pointsFullName, 'file'))                
                 this = loadImagePairs(this);
@@ -378,7 +372,7 @@ classdef calibration
             this.imagePointsRightMinus = this.imagePointsRightMinus(:, :, this.imagesUsed);
 
             % Exclude files
-            fprintf('>> Excluding %d pairs\n', length(this.Exclude));
+            fprintf('>> Excluding %d pairs\n', length(this.exclude));
             this = this.excludeFrames();
             
             this.totalFrames = size(this.imagePointsLeft, 3);
@@ -429,20 +423,20 @@ classdef calibration
             fprintf('>> Plotting calibration summary\n');
             h = plotSummary(this);
 
-            if(this.SaveSummary)
-                print(h.error, '-dpng', fullfile(this.FramesPath, ...
-                    sprintf('%s_vision_errors.png', this.Name)));
-                print(h.patternLocation, '-dpng', fullfile(this.FramesPath, ...
-                    sprintf('%s_vision_checkerboard_locations.png', this.Name)));
-                print(h.cameraModel, '-dpng', fullfile(this.FramesPath, ...
-                    sprintf('%s_vision_camera_model.png', this.Name)));
+            if(this.saveSummary)
+                print(h.error, '-dpng', fullfile(this.framesPath, ...
+                    sprintf('%s_errors.png', this.name)));
+                print(h.patternLocation, '-dpng', fullfile(this.framesPath, ...
+                    sprintf('%s_checkerboard_locations.png', this.name)));
+                print(h.cameraModel, '-dpng', fullfile(this.framesPath, ...
+                    sprintf('%s_camera_model.png', this.name)));
             end
             
             % Verify calibration
             fprintf('>> Verification\n');
             
             % find correct frame
-            if(isempty(this.CheckFrameNumber)) % get first available frame
+            if(isempty(this.checkFrameNumber)) % get first available frame
                 tmp = strsplit(this.fileNames{1}, 'f');
                 frameIdx = tmp{end};
             else
@@ -500,11 +494,11 @@ classdef calibration
             % Find frame index in the provided set
             A = cellfun(@(i) strsplit(i, '_'), this.fileNames, 'UniformOutput', false);
             str = cellfun(@(i) i{1}, A, 'UniformOutput', false);
-            I = strcmp(sprintf('f%d', this.CheckFrameNumber), str);
+            I = strcmp(sprintf('f%d', this.checkFrameNumber), str);
             frameIdx = find(I == 1);
             if(isempty(frameIdx))
                 error(['Pair %d not found for verification. This was either exclude with the ' ...
-                    '''Exclude'' option or no pattern was found in it'], this.CheckFrameNumber);
+                    '''Exclude'' option or no pattern was found in it'], this.checkFrameNumber);
             end
         end
         
@@ -519,41 +513,41 @@ classdef calibration
 end
 
 %% Parameter validation
-function [FramesPath, SquareSize, lagParamsFile, Name, Exclude, SaveSummary, CheckFrameNumber, ...
-    DisparityBlockSize, DisparityContrastThreshold, DisparityUniquenessThreshold, ...
-    DisparityMax] = validateAndParseInputs(varargin)
+function [framesPath, squareSize, lagParamsFile, name, exclude, saveSummary, checkFrameNumber, ...
+    disparityBlockSize, disparityContrastThreshold, disparityUniquenessThreshold, ...
+    disparityMax] = validateAndParseInputs(varargin)
     % Validate and parse inputs
-    narginchk(1, 19);
+    narginchk(7, 15);
 
     parser = inputParser;
-    parser.CaseSensitive = true;
+    parser.CaseSensitive = false;
 
-    parser.addRequired('FramesPath', @(x)validateattributes(x, {'char'}, {'nonempty'}));
-    parser.addRequired('SquareSize',  @(x)validateattributes(x,{'numeric'}, {'real','scalar', '>=', 1}));
+    parser.addRequired('framesPath', @(x)validateattributes(x, {'char'}, {'nonempty'}));
+    parser.addRequired('squareSize',  @(x)validateattributes(x,{'numeric'}, {'real','scalar', '>=', 1}));
     parser.addRequired('lagParamsFile',  @(x)validateattributes(x, {'char'}, {'nonempty'}));
-    parser.addParameter('Name', 'cal', @(x)validateattributes(x, {'char'}, {'nonempty'}));
-    parser.addParameter('Exclude', [], @(x)validateattributes(x, {'numeric'}, {'row', '>=', 0}));
-    parser.addParameter('SaveSummary', true, @(x)validateattributes(x, {'logical'}, {'nonempty'}));
-    parser.addParameter('CheckFrameNumber',  [], @(x)validateattributes(x, {'numeric'}, {'real', 'scalar', 'integer'}));
+    parser.addParameter('name', 'cal', @(x)validateattributes(x, {'char'}, {'nonempty'}));
+    parser.addParameter('exclude', [], @(x)validateattributes(x, {'numeric'}, {'row', '>=', 0}));
+    parser.addParameter('saveSummary', true, @(x)validateattributes(x, {'logical'}, {'nonempty'}));
+    parser.addParameter('checkFrameNumber',  [], @(x)validateattributes(x, {'numeric'}, {'real', 'scalar', 'integer'}));
     
-    parser.addParameter('DisparityBlockSize',  15, @(x)validateattributes(x, {'numeric'}, {'real', 'scalar', 'integer', 'odd', '>=', 5,'<=',255}));
-    parser.addParameter('DisparityContrastThreshold',  0.5, @(x)validateattributes(x, {'numeric'}, {'real', 'scalar', '>=',0,'<=',1}));
-    parser.addParameter('DisparityUniquenessThreshold',  15, @(x)validateattributes(x, {'numeric'}, {'real', 'scalar', '>=', 0}));
-    parser.addParameter('DisparityMax', 64, @(x)validateattributes(x, {'numeric'},{'real', 'scalar', '>=', 1}));
+    parser.addParameter('disparityBlockSize',  15, @(x)validateattributes(x, {'numeric'}, {'real', 'scalar', 'integer', 'odd', '>=', 5,'<=',255}));
+    parser.addParameter('disparityContrastThreshold',  0.5, @(x)validateattributes(x, {'numeric'}, {'real', 'scalar', '>=',0,'<=',1}));
+    parser.addParameter('disparityUniquenessThreshold',  15, @(x)validateattributes(x, {'numeric'}, {'real', 'scalar', '>=', 0}));
+    parser.addParameter('disparityMax', 64, @(x)validateattributes(x, {'numeric'},{'real', 'scalar', '>=', 1}));
         
     parser.parse(varargin{:});
 
-    FramesPath = parser.Results.FramesPath;
-    SquareSize = parser.Results.SquareSize;
+    framesPath = parser.Results.framesPath;
+    squareSize = parser.Results.squareSize;
     lagParamsFile = parser.Results.lagParamsFile;
 
-    Name = parser.Results.Name;
-    Exclude = parser.Results.Exclude;
-    SaveSummary = parser.Results.SaveSummary;
-    CheckFrameNumber = parser.Results.CheckFrameNumber;
-    DisparityBlockSize = parser.Results.DisparityBlockSize;
-    DisparityContrastThreshold = parser.Results.DisparityContrastThreshold;
-    DisparityUniquenessThreshold = parser.Results.DisparityUniquenessThreshold;
-    DisparityMax = parser.Results.DisparityMax;
+    name = parser.Results.name;
+    exclude = parser.Results.exclude;
+    saveSummary = parser.Results.saveSummary;
+    checkFrameNumber = parser.Results.checkFrameNumber;
+    disparityBlockSize = parser.Results.disparityBlockSize;
+    disparityContrastThreshold = parser.Results.disparityContrastThreshold;
+    disparityUniquenessThreshold = parser.Results.disparityUniquenessThreshold;
+    disparityMax = parser.Results.disparityMax;
 end
 

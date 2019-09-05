@@ -1,8 +1,8 @@
 function this = excludeFrames(this)
 %EXCLUDEFRAMES Removes frames from the calibration set.
 
-    if(~isempty(this.Exclude))
-        for e=this.Exclude
+    if(~isempty(this.exclude))
+        for e=this.exclude
             I = find(ismember(this.fileNames, sprintf('f%d', e)));
             if(~isempty(I))
                 this.imagesLeftAll(I) = [];

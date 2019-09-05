@@ -4,7 +4,7 @@ function this = loadImagePairs(this)
 % AUTHOR: Stefano Simoncelli <simoncelli@igb-berlin.de>
 
     %% Left frame
-    framesLeftCameraPath = fullfile(this.FramesPath, 'frames_left_camera');
+    framesLeftCameraPath = fullfile(this.framesPath, 'frames_left_camera');
     this.fileNames = dir([framesLeftCameraPath '/f*.png']);
     if(isempty(this.fileNames))
         error('Cannot find any images in %s', framesLeftCameraPath);
@@ -19,7 +19,7 @@ function this = loadImagePairs(this)
     this.fileNamesAll = strrep({this.fileNames.name}, '.png', '');
     
     %% Right frame. Split between synced frames and + / -
-    framesRightCameraPath = fullfile(this.FramesPath, 'frames_right_camera');
+    framesRightCameraPath = fullfile(this.framesPath, 'frames_right_camera');
     fileNamesRight = dir([framesRightCameraPath '/f*.png']);
     
     % natural sorting

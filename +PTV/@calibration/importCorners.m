@@ -24,8 +24,8 @@ function this = importCorners(this, workspaceFile)
     this.imageSize = a.imageSize;
     this.totalFrames = a.totalFrames;
     this.worldPoints = a.worldPoints;
-    this.FramesPath = a.FramesPath;
-    this.SquareSize = a.SquareSize;
-    this.Name = a.Name;
+    this.framesPath = a.framesPath;
+    this.squareSize = a.squareSize;
+    this.name = a.name;
 end
 
