@@ -327,7 +327,7 @@ classdef parSyncVideos
             K = K(~I);
             FPrime = FPrime(~I);
             N = length(K);
-            
+
             % output variables
             D = NaN(N, 1);
             L = D; L_tilde = D; tau = D; F1 = D; F2 = D; lagTime = D;
@@ -369,6 +369,8 @@ classdef parSyncVideos
                     % F2(1)= F1(1) - L_tilde(1) + 1 = 47 - 47 + 1 = 1;
                     F1(k) = L_tilde(k) + FPrime(k) - 1;
                     F2(k) = F1(k) - L_tilde(k) + 1;
+                elseif(isnan(D(k))
+                    continue;
                 else
                     % Left video is delayed
                     % FPrime = 1; L_tilde(1) = -47; F1(1) = FPrime = 1; 
