@@ -6,6 +6,7 @@ function h = plotErrors(this)
 
     h = figure;
     subplot(211);
+    
     ax = showReprojectionErrors(this.stereoParams);
     set(ax, 'XTick', 1:this.totalFrames);
     set(ax, 'XTickLabel', this.fileNames);
