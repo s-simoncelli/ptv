@@ -44,7 +44,7 @@ classdef parSyncVideos
 %                           Default: 48000*60
 %
 %    'workers'              Number of parallel workers to use. This depends
-%                           on the available cores on your CPU.
+%                           on the available cores/memory on your system.
 %
 %                           Default: 2
 %   
@@ -369,7 +369,7 @@ classdef parSyncVideos
                     % F2(1)= F1(1) - L_tilde(1) + 1 = 47 - 47 + 1 = 1;
                     F1(k) = L_tilde(k) + FPrime(k) - 1;
                     F2(k) = F1(k) - L_tilde(k) + 1;
-                elseif(isnan(D(k))
+                elseif(isnan(D(k)))
                     continue;
                 else
                     % Left video is delayed

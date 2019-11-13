@@ -1,7 +1,6 @@
 # Introduction
 
-This MATLAB package extracts the lag data between two non-synchronised video 
-streams. Type
+This MATLAB package estimates the lag  between two non-synchronised video streams. Type
 
     help PTV.syncVideos
 

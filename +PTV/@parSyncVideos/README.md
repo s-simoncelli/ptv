@@ -34,7 +34,7 @@ anytime in the MATLAB Command Window to recall the following documentation.
 - **videoFileExtension** -  Extension of the video files . Default: 'MP4'
 - **frameStep** -      Step to use for the video frames. The delay will be estimated every 'frameStep' frames. Default: 100
 - **audioWindowSize** -      Length of the window (as number of audio samples) to use when performing the auto-correlation of the two audio signals. This must include the time instant of the delay. If one camera was started after 1 min from the other one, set this larger than 48000\*60. Default: 48000\*60
-- **workers** -  Number of parallel workers to use. This depends on the available cores on your CPU. Default: 2
+- **workers** -  Number of parallel workers to use. This depends on the available cores/memory on your system. Default: 2
 
 
 `obj = PTV.parSyncVideos(...)` returns a *parSyncVideos* object containing the output of the lag estimation.
