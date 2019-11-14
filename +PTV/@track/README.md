@@ -42,7 +42,7 @@ anytime in the MATLAB Command Window to recall the following documentation.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A track is regarded as visible when a particle is associated to it. A tracks is considered lost or invisible when no particles are associated to it for too many consecutive frames. Lost tracks identify particles that exist the FOV and are not visible anymore, or particles that are not detected anymore by the blob analysis algorithm. A track is defined as lost when one of the following conditions occur:
 
- * the track age (defined as number of frames since the track was first detected) is between than `ageMin` and `ageMax` and their visibility (defined as the fraction of the track's age for which it was  visible) is less than `visibilityRatio`. This criterion identifies young tracks that have been invisible for too many frames. 'ageMin' ensures not to remove tracks immediately. For example if age = 2 and the track was invisible for 1 frame, visibility would .5 and the track would be removed if visibilityRatio = 0.6.  In the example the number of non consecutive frames for which  the track was invisible is 0.6*8 ~ 5 frames.
+ * the track age (defined as number of frames since the track was first detected) is between than `ageMin` and `ageMax` and their visibility (defined as the fraction of the track's age for which it was  visible) is less than `visibilityRatio`. This criterion identifies young tracks that have been invisible for too many frames. `ageMin` ensures not to remove tracks immediately. For example if age = 2 and the track was invisible for 1 frame, visibility would .5 and the track would be removed if visibilityRatio = 0.6.  In the example the number of non consecutive frames for which  the track was invisible is 0.6*8 ~ 5 frames.
 
   * the number of consecutive frames when the track was invisible is greater or equal to `invisibleForTooLong`. This helps to identify particles that left the system and whose track is not traceable anymore. 
         
@@ -88,6 +88,48 @@ anytime in the MATLAB Command Window to recall the following documentation.
 - **trackFile**: path to saved tracks
 - **logFile**: path to log file
 - **numberOfFrames**: total number of frames in videos
+- **unit**:  unit for 3D coordinates
+
+`obj = PTV.calibration(...)` saves the track output every `autoSaveEvery` analysed frames in an ASCII file in the `logs` subfolder, where your videos are stored. When the file reaches 300 MiB a new result file is created. These files contain a table; each row contains data about a particle detected in the frame at a given time instant. The table columns are the following:
+
+- **Step**: number of tracking step when particle was detected.
+- **Global left frame**: cumulative number of frame from the left camera, when particle was detected.
+- **Global right frame**: cumulative number of frame from the right camera, when particle was detected.
+- **Time**: cumulative elapsed time from videos from the left camera, when particle was detected.
+- **Left video**: number of video from the set of the left camera, when particle was detected.
+- **Left frame ID**: number of frame relative to `Left video` from the left camera, when particle was detected.
+- **Right video**: number of video from the set of the right camera, when particle was detected.
+- **Right frame ID**: number of frame relative to `Right video` from the left camera, when particle was detected.
+- **Track ID**: the detected particle is part of the track identified by this unique number.
+- **Age**: particle age. See `trackDetectionSettings`.
+- **TotalVisibleCount**: see `trackDetectionSettings`.
+- **TotalInvisibleCount**: see `trackDetectionSettings`.
+- **ConsecutiveInvisibleCount**: see `trackDetectionSettings`.
+- **Estimated**: whether the particle position in px was estimated by the Kalman Filter. Position is estimated if the particle is not assigned toa track by the assignement algorithm.
+- **Lost**: see `trackDetectionSettings`.
+- **x**: horizontal position of the particle in the left frame in px.
+- **y**: vertical position of the particle in the left frame in px.
+- **Disparity**: particle disparity in px. This is NaN is not particle is matched.
+- **Area**: particle area in px.
+- **Major ax**: particle major axis in px.
+- **Minor ax**: particle minor axis in px.
+- **Area**: particle area in px.
+- **Orientation**: particle orientation in deg.
+- **Eccentricity**: particle eccentricity.
+- **r2**: equivalent squared radius of particle in px.
+- **Perimeter**: particle perimeter in px.
+- **BB Width**: width of the bounding box in px.
+- **BB Height**: height of the bounding box in px.
+- **X**: particle X location. The unit depends on the unit used in the calibration, usually mm.
+- **Y**: particle Y location.
+- **Z**: particle Z location.
+- **Length H**: particle horizontal length. The unit depends on the unit used in the calibration, usually mm.
+- **Length V**: particle vertical length. The unit depends on the unit used in the calibration, usually mm.
+
+In the `logs` subfolder the following files are also created:
+
+- **info_*.log**: the log file contains info or warning messages during each step of the tracking. 
+- **settings_*.yml**: this file contains all the parameters used in the tracking process.
 
 
  # Example

@@ -51,12 +51,12 @@ anytime in the MATLAB Command Window to recall the following documentation.
 - **fileNames** - File names in the calibration set
 
 ## Corner-detection output
-- **imagePointsLeft** - Detected points in frames from left cameras. See `detectCheckerboardPoints`
+- **imagePointsLeft** - Detected points in frames from left cameras. See `detectchequerboardPoints`
 - **imagePointsRight**  - Detected points in frames from right cameras. These points have been fixed to ensure frame synchronisation.
 - **imagePoints** - Pattern points used in the calibration.
-- **worldPoints** - Real world points of checkerboard. See `generateCheckerboardPoints`
-- **boardSize** - Number of rows and columns in checkerboard. See `detectCheckerboardPoints`
-- **imagesUsed** - Frames where the pattern was detected. See `detectCheckerboardPoints`
+- **worldPoints** - Real world points of chequerboard. See `generatechequerboardPoints`
+- **boardSize** - Number of rows and columns in chequerboard. See `detectchequerboardPoints`
+- **imagesUsed** - Frames where the pattern was detected. See `detectchequerboardPoints`
 - **imageSize**- Size of the frame in pixels
 - **totalFrames** - Total number of valid and non-excluded frames used in the calibration set. 
 
@@ -76,15 +76,14 @@ anytime in the MATLAB Command Window to recall the following documentation.
 - **invalidXYZCount** - Number of invalid world points in the 3D scene
 - **ptCloud** - points3D as pointCloud object. See `pointCloud`
 
-
 `obj = PTV.calibration(...)` provides the following public methods:
 
 - **plotErrors** - Plot reprojection and rectification histograms.
-- **plotPatternLocations** - Plot 3D location of checkerboards.
+- **plotPatternLocations** - Plot 3D location of chequerboards.
 - **plotCameraModel**      - Plot the camera models (accounting for radial and tangential distortions) and the relative position of the two cameras.
 - **plotSummary**    - Run the 3 above methods together.
 - **plot3DScene**    - Plot the 3D scene of `CheckFrameNumber` frame.
-- **plotDiscardedFrames** - Plot frames where the checkerboard corners were not fully detected.
+- **plotDiscardedFrames** - Plot frames where the chequerboard corners were not fully detected.
 - **plotExcludedFrames**   - Check which frames were excluded with the `Exclude` option.
 - **check**                - Check that the calibration works by correctly estimating the disparity map and reproducing the 3D scene for a provided frame pair.
 - **compareRectifiedChequerboards** - Compare rectified frames containing the chequerboards used in the calibration. Chequer edges should be row-aligned  according to epipolar geometry.

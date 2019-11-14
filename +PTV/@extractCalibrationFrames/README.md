@@ -1,6 +1,6 @@
 # Introduction
 
-This MATLAB package extracts synchronised video frames to be used in `PTV.calibration.` Type
+This MATLAB package extracts synchronised video frames to be used in `PTV.calibration`. Type
 
     help PTV.extractCalibrationFrames
 
