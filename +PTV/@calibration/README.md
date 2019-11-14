@@ -31,10 +31,10 @@ anytime in the MATLAB Command Window to recall the following documentation.
 
 `obj = PTV.calibration(..., Name, Value)` specifies additional name-value pairs described below:
 
-- **name** -  Name of the calibration. Default: 'cal'
-- **exclude** -   Frame IDs to exclude from the calibration set. For example to exclude images 'f1' and 'f4', use [1 4]. This is useful to exclude frames with high reprojection errors. Default: []
+- **name** -  Name of the calibration. Default: `cal`
+- **exclude** -   Frame IDs to exclude from the calibration set. For example to exclude images `f1` and `f4`, use [1 4]. This is useful to exclude frames with high reprojection errors. Default: []
 - **saveSummary** -  Save plots with calibration results. Default: true
-- **checkFrameNumber** -   Frame number to use to verify the calibration (i.e to compute the disparity and reconstruct the 3D scene). You can also verify the calibration using a frame pair not belonging to the calibration set by calling the 'check' method. Default: first frame included in the calibration set. The set includes frames with detected chequerboard corners and includes frames that have not been exluded with the 'Exclude' setting.
+- **checkFrameNumber** -   Frame number to use to verify the calibration (i.e to compute the disparity and reconstruct the 3D scene). You can also verify the calibration using a frame pair not belonging to the calibration set by calling the `check` method. Default: first frame included in the calibration set. The set includes frames with detected chequerboard corners and includes frames that have not been exluded with the `Exclude` setting.
 - **disparityBlockSize** -  Width of each square block whose pixels are used for comparison between the images.  Default: 15. Max: 255. Min: 5.
 - **disparityMax** -  Maximum value of disparity. Run the calibration at least once to measure the maximum distance using the imtool from the stereo anaglyph. Default: 64. 
 - **disparityContrastThreshold** - Acceptable range of contrast values. Increasing this parameter results in fewer pixels being marked as unreliable. Default: 0.5. Max: 1. Min: 0. 
