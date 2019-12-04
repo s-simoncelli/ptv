@@ -1,7 +1,6 @@
 # Introduction
 
-This MATLAB package extracts the lag data between two non-synchronised video 
-streams. Type
+This MATLAB package estimates the lag  between two non-synchronised video streams. Type
 
     help PTV.syncVideos
 
@@ -38,14 +37,14 @@ anytime in the MATLAB Command Window to recall the following documentation.
 `obj = PTV.syncVideos(...)` returns a *syncVideos* object containing the output of the lag estimation.
 
 # syncVideos properties
- - **videoSetLeftCamera**      - Complete path to the folder containing the 1st set of video files or path to a video
- - **videoSetRightCamera**      - Complete path to the folder containing the 2nd set of video files or path to a video
+ - **videoSetLeftCamera**      - Complete path to the folder containing the set of video files or path to a video from the left camera
+ - **videoSetRightCamera**      - Complete path to the folder containing the set of video files or path to a video from the right camera
  - **frameRate**      - The video frame rate
  - **totalVideos**    - The total processed videos
- - **framesSet1**     - The number of frames in each video files from 1st set
- - **framesSet2**     - The number of frames in each video files from 2nd set
- - **totalFramesCamera1**      - The total frames in 1st set
- - **totalFramesCamera2**      - The total frames in 2nd set
+ - **framesSetLeft**     - The number of frames in each video file from the set from the left camera
+ - **framesSetRight**     - The number of frames in each video file from the set from the right camera
+ - **totalFramesLeftCamera**      - The total frames in video set from the left camera
+ - **totalFramesRightCamera**      - The total frames in video set from the right camera
  - **audioSamplingFrequency**  - The video frame rate
  - **totalAudioSamples**  - Total audio samples
  - **lag**            - The lag output table with the following variables

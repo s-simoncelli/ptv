@@ -13,7 +13,7 @@ anytime in the MATLAB Command Window to recall the following documentation.
 
 # Usage
  ```matlab
-    % path to folder or to single video
+    % path to video-containg folder or to single video
     pathToFrames = '/path/to/images';
     videoSetLeftCamera = '/path/to/videos/from/left/camera';
     videoSetRightCamera = '/path/to/videos/from/right/camera';
@@ -25,29 +25,29 @@ anytime in the MATLAB Command Window to recall the following documentation.
 ```
 
   `PTV.parSyncVideos()` requires the following parameters:
-   1) Path to a video  or a folder containing all videos recorded from left camera
-   2) Path to a video  or a folder containing all videos recorded from right camera
-   3) Path to mexopencv library.
+   1) **videoSetLeftCamera**: path to a video  or a folder containing all videos recorded from left camera
+   2) **videoSetRightCamera**: path to a video  or a folder containing all videos recorded from right camera
+   3) **mexopencvPath**: path to mexopencv library.
 
 `obj = PTV.parSyncVideos(..., Name, Value)` specifies additional name-value pairs described below:
 
 - **videoFileExtension** -  Extension of the video files . Default: 'MP4'
 - **frameStep** -      Step to use for the video frames. The delay will be estimated every 'frameStep' frames. Default: 100
 - **audioWindowSize** -      Length of the window (as number of audio samples) to use when performing the auto-correlation of the two audio signals. This must include the time instant of the delay. If one camera was started after 1 min from the other one, set this larger than 48000\*60. Default: 48000\*60
-- **workers** -  Number of parallel workers to use. This depends on the available cores on your CPU. Default: 2
+- **workers** -  Number of parallel workers to use. This depends on the available cores/memory on your system. Default: 2
 
 
 `obj = PTV.parSyncVideos(...)` returns a *parSyncVideos* object containing the output of the lag estimation.
 
 # parSyncVideos properties
- - **videoSetLeftCamera**      - Complete path to the folder containing the 1st set of video files or path to a video
- - **videoSet2**      - Complete path to the folder containing the 2nd set of video files or path to a video
+ - **videoSetLeftCamera**      - Complete path to the folder containing the set of video files or path to a video from the left camera
+ - **videoSetRightCamera**      - Complete path to the folder containing the set of video files or path to a video from the right camera
  - **frameRate**      - The video frame rate
  - **totalVideos**    - The total processed videos
- - **framesSet1**     - The number of frames in each video files from 1st set
- - **framesSet2**     - The number of frames in each video files from 2nd set
- - **totalFramesCamera1**      - The total frames in 1st set
- - **totalFramesCamera2**      - The total frames in 2nd set
+ - **framesSetLeft**     - The number of frames in each video file from the set from the left camera
+ - **framesSetRight**     - The number of frames in each video file from the set from the right camera
+ - **totalFramesLeftCamera**      - The total frames in video set from the left camera
+ - **totalFramesRightCamera**      - The total frames in video set from the right camera
  - **audioSamplingFrequency**  - The video frame rate
  - **totalAudioSamples**  - Total audio samples
  - **lag**            - The lag output table with the following variables

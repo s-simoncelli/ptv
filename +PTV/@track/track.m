@@ -34,11 +34,11 @@ classdef track
 %       cameras or large and far-away particles may not be detected. If 
 %       'minimumBlobArea' is instead too small, you might track background
 %       variations that are not particles, but small variations in ligth
-%       intensity.
+%       intensity in the background.
 %       If 'maximumCount' is too small, some particles may not be tracked
 %       in some areas of the image. Make sure to detect as many particle as
-%       possible. Change this values based on the number of particles
-%       expected in the system, 'minimumBlobArea' and 'maximumBlobArea'.
+%       possible. Change these values based on the number of particles
+%       expected in the system.
 % 
 %   trackDetectionSettings  
 %       Struct array with options for track detection settings. Example: 
@@ -98,8 +98,8 @@ classdef track
 %
 %                           Default: []
 %
-%   'startingVideo'         Number of video from left camera to start 
-%                           processing in the set
+%   'startingVideo'         Number of video from left camera when to start 
+%                           processing the video set. Default: 1
 %
 %                           Default: 1
 %
@@ -112,9 +112,19 @@ classdef track
 %
 %                           Default: 0
 %
+%   'endingVideo'           Number of video from left camera when to stop
+%                           processing in the set. 
+%
+%                           Default: 1
+%
+%   'endingTime'            Number of seconds from the 'endingVideo' video
+%                           when to stop processing the frames. 
+%
+%                           Default: 0
+%
 %   'numberOfTrainingFrames'    Number of frames to use for training the 
 %                               foreground algorithm. See
-%                               'NumTrainingFrames' in vision.ForegroundDetector
+%                              'NumTrainingFrames' in vision.ForegroundDetector
 % 
 %                               Default: 100
 %
@@ -177,6 +187,7 @@ classdef track
 %      trackFile      - Path to saved tracks
 %      logFile        - Path to log file
 %      numberOfFrames - Total number of frames in videos
+%      unit           - Unit for 3D coordinates
 %
 %AUTHOR: Stefano Simoncelli <simoncelli@igb-berlin.de>
 
@@ -279,8 +290,8 @@ classdef track
         
        % total number of frames in videos
        numberOfFrames
-       
-       % unit for measurements
+
+       % unit for 3D coordinates
        unit
     end
     
@@ -472,6 +483,7 @@ classdef track
         
         [] = displayTracks(this);
         this = releaseSystem(this);
+
         if(~this.noGUI)
             this = progressWindow(this);
         end

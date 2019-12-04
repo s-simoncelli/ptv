@@ -1,4 +1,7 @@
 classdef parSyncVideos
+%% Introduction
+% Test
+%
 %PARSYNCVIDEOS determines the video delay between two sets of video files
 %based on the analysis of the audio signals. Usage:
 %
@@ -44,7 +47,7 @@ classdef parSyncVideos
 %                           Default: 48000*60
 %
 %    'workers'              Number of parallel workers to use. This depends
-%                           on the available cores on your CPU.
+%                           on the available cores/memory on your system.
 %
 %                           Default: 2
 %   
@@ -52,17 +55,19 @@ classdef parSyncVideos
 %   obj = PTV.parSyncVideos(...) returns a track object containing the following 
 %   public properties:
 %
-%      videoSetLeftCamera    - Complete path to the folder containing the 1st set 
-%                              of video files or path to a video
-%      videoSetRightCamer    - Complete path to the folder containing the 2nd set
-%                              of video files or path to a video
-%      frameRate      - The video frame rate
-%      totalVideos    - The total processed videos
-%      framesSet1     - The number of frames in each video files from 1st set
-%      framesSet2     - The number of frames in each video files from 2nd set
-%      totalFramesCamera1      - The total frames in 1st set
-%      totalFramesCamera2      - The total frames in 2nd set
-%      totalAudioSamples       - Total audio samples
+%      videoSetLeftCamera    - Complete path to the folder containing the set
+%                              of video files or path to a video from the left camera
+%      videoSetRightCamera   - Complete path to the folder containing the set
+%                              of video files or path to a video from the right camera
+%      frameRate             - The video frame rate
+%      totalVideos           - The total processed videos
+%      framesSetLeft         - The number of frames in each video files from 
+%                              the left camera
+%      framesSetRight        - The number of frames in each video files from 
+%                              the right camera
+%      totalFramesLeftCamera      - The total frames from the left camera
+%      totalFramesRightCamera     - The total frames from the right camera
+%      totalAudioSamples     - Total audio samples
 %      lag             - The lag output table with the following variables
 %                           * time: time from left video
 %                           * F1: synced frame from left video
@@ -102,17 +107,17 @@ classdef parSyncVideos
         % total processed videos
         totalVideos
         
-        % frames in each video files from 1st set
-        framesSet1
+        % frames in each video file from the set from left camera
+        framesSetLeft
         
-        % frames in each video files from 2nd set
-        framesSet2
+        % frames in each video file from the set from right camera
+        framesSetRight
         
-        % total frames in 1st set
-        totalFramesCamera1
+        % total frames in video set from left camera
+        totalFramesLeftCamera
         
-        % total frames in 2nd set
-        totalFramesCamera2
+        % total frames in video set from right camera
+        totalFramesRightCamera
         
         % frame step to use in assessing the lag
         frameStep
@@ -146,19 +151,21 @@ classdef parSyncVideos
         % number of parallel workers to use
         workers
 
-        % complete path to the folder containing the 1st set of video files
-        videoSet1
+        % complete path to the folder containing the set of video files or 
+        % path to a video from the left camera
+        videoSetLeftCamera
         
-        % complete path to the folder containing the 2nd set of video files
-        videoSet2 
+        % complete path to the folder containing the 2nd set of video files 
+        % or path to a video from the right camera
+        videoSetRightCamera 
     end
     
     properties (Access = private)
-        % vide files in 1st set
-        fileList1
+        % video files in 1st set
+        fileListLeft
         
-        % vide files in 2nd set
-        fileList2
+        % video files in 2nd set
+        fileListRight
         
         % total number of frames to process
         totalSamples
@@ -175,23 +182,23 @@ classdef parSyncVideos
         % time vector for audio
         audioTime
         
-        % full audio tracks from 1st set
-        audio1
+        % full audio tracks from the set from the left camera
+        audioLeft
         
-        % full audio tracks from 2nd set
-        audio2
+        % full audio tracks from the set from the right camera
+        audioRight
         
         % subsample of full audio tracks from 1st set
-        audio1Sample
+        audioLeftSample
         
         % subsample of full audio tracks from 2nd set
-        audio2Sample
+        audioRightSample
         
         % shifted subsample of full audio tracks from 1st set
-        audio1SampleShifted
+        audioLeftSampleShifted
         
         % shifted subsample of full audio tracks from 2nd set
-        audio2SampleShifted        
+        audioRightSampleShifted        
         
         % audio frame rate
         audioSamplingFrequency
@@ -209,7 +216,7 @@ classdef parSyncVideos
         %==================================================================
         % obj = parSyncVideos();
         function this = parSyncVideos(varargin)            
-            [this.videoSet1, this.videoSet2, this.mexopencvPath, ...
+            [this.videoSetLeftCamera, this.videoSetRightCamera, this.mexopencvPath, ...
                 this.videoFileExtension, this.frameStep, this.audioWindowSize, ...
                 this.workers] = ...
                     validateAndParseInputs(varargin{:}); 
@@ -217,37 +224,37 @@ classdef parSyncVideos
             this.lagHeader = {'time', 'F1', 'F2', 'D', 'L', 'L_tilde', 'tau'};
             addpath(this.mexopencvPath);
 
-            if(contains(this.videoSet1, this.videoFileExtension))
-                this.fileList1{1}.fullFile = this.videoSet1;
-                this.fileList2{1}.fullFile = this.videoSet2;
+            if(contains(this.videoSetLeftCamera, this.videoFileExtension))
+                this.fileListLeft{1}.fullFile = this.videoSetLeftCamera;
+                this.fileListRight{1}.fullFile = this.videoSetRightCamera;
                 
-                [fPath, fName] = fileparts(this.videoSet1);
-                this.fileList1{1}.fileName = sprintf('%s.%s', fName, this.videoFileExtension);
-                this.videoSet1 = fPath;
+                [fPath, fName] = fileparts(this.videoSetLeftCamera);
+                this.fileListLeft{1}.fileName = sprintf('%s.%s', fName, this.videoFileExtension);
+                this.videoSetLeftCamera = fPath;
                 
-                [fPath, fName] = fileparts(this.videoSet2);
-                this.fileList2{1}.fileName = sprintf('%s.%s', fName, this.videoFileExtension);
-                this.videoSet2 = fPath;
+                [fPath, fName] = fileparts(this.videoSetRightCamera);
+                this.fileListRight{1}.fileName = sprintf('%s.%s', fName, this.videoFileExtension);
+                this.videoSetRightCamera = fPath;
             else
-                this.fileList1 = this.loadFiles(this.videoSet1, this.videoFileExtension);
-                this.fileList2 = this.loadFiles(this.videoSet2, this.videoFileExtension);
+                this.fileListLeft = this.loadFiles(this.videoSetLeftCamera, this.videoFileExtension);
+                this.fileListRight = this.loadFiles(this.videoSetRightCamera, this.videoFileExtension);
             end
 
-            if(isempty(this.fileList1) || isempty(this.fileList2))
-                error('Cannot file files in ''videoSet1'' or ''videoSet2''');
+            if(isempty(this.fileListLeft) || isempty(this.fileListRight))
+                error('Cannot file files in ''videoSetLeftCamera'' or ''videoSetRightCamera''');
             end
             
             %% Collect total video frames
-            this.totalVideos = length(this.fileList1);
+            this.totalVideos = length(this.fileListLeft);
       
-            this.framesSet1 = NaN(1, this.totalVideos);
-            this.framesSet2 = this.framesSet1;
+            this.framesSetLeft = NaN(1, this.totalVideos);
+            this.framesSetRight = this.framesSetLeft;
             for v=1:this.totalVideos
-                videoObject = cv.VideoCapture(this.fileList1{v}.fullFile);
-                this.framesSet1(v) = videoObject.FrameCount;
+                videoObject = cv.VideoCapture(this.fileListLeft{v}.fullFile);
+                this.framesSetLeft(v) = videoObject.FrameCount;
 
-                videoObject = cv.VideoCapture(this.fileList2{v}.fullFile);
-                this.framesSet2(v) = videoObject.FrameCount;
+                videoObject = cv.VideoCapture(this.fileListRight{v}.fullFile);
+                this.framesSetRight(v) = videoObject.FrameCount;
 
                 if(v == 1)
                     % with NTSC format the frame rate may not be an integer
@@ -255,16 +262,16 @@ classdef parSyncVideos
                 end
             end
 
-            this.totalFramesCamera1 = sum(this.framesSet1);
-            this.totalFramesCamera2 = sum(this.framesSet2);
-            this.totalSamples = min([this.totalFramesCamera1 this.totalFramesCamera2]);
+            this.totalFramesLeftCamera = sum(this.framesSetLeft);
+            this.totalFramesRightCamera = sum(this.framesSetRight);
+            this.totalSamples = min([this.totalFramesLeftCamera this.totalFramesRightCamera]);
 
             %% Collect audio data (not optimised)
-            a1 = fullfile(this.videoSet1, 'audioData.mat');
-            a2 = fullfile(this.videoSet2, 'audioData.mat');
+            a1 = fullfile(this.videoSetLeftCamera, 'audioData.mat');
+            a2 = fullfile(this.videoSetRightCamera, 'audioData.mat');
             if(~exist(a1, 'file') || ~exist(a2, 'file'))
-                this.audio1 = [];
-                this.audio2 = [];
+                this.audioLeft = [];
+                this.audioRight = [];
                 audioChannel = 1; % use 1st track in stereo
                 timeTaken = 25;
                 f = waitbar(0, 'Please wait...');
@@ -274,32 +281,32 @@ classdef parSyncVideos
                     waitbar(v/this.totalVideos, f, ...
                         sprintf('Collecting audio tracks from video %d/%d - Left ~%.2f secs', ...
                         v, this.totalVideos, leftTime));
-                    [audioTmp1, Fs] = audioread(this.fileList1{v}.fullFile);
-                    audioTmp2 = audioread(this.fileList2{v}.fullFile);
+                    [audioTmp1, Fs] = audioread(this.fileListLeft{v}.fullFile);
+                    audioTmp2 = audioread(this.fileListRight{v}.fullFile);
 
-                    this.audio1 = [this.audio1; audioTmp1(:, audioChannel)];
-                    this.audio2 = [this.audio2; audioTmp2(:, audioChannel)];
+                    this.audioLeft = [this.audioLeft; audioTmp1(:, audioChannel)];
+                    this.audioRight = [this.audioRight; audioTmp2(:, audioChannel)];
                     timeTaken = toc; 
                 end
                 % Export files
-                audioTrack1 = this.audio1;
-                save(fullfile(this.videoSet1, 'audioData.mat'), 'audioTrack1', 'Fs');
-                audioTrack2 = this.audio2;
-                save(fullfile(this.videoSet2, 'audioData.mat'), 'audioTrack2', 'Fs');
+                audioTrack1 = this.audioLeft;
+                save(fullfile(this.videoSetLeftCamera, 'audioData.mat'), 'audioTrack1', 'Fs');
+                audioTrack2 = this.audioRight;
+                save(fullfile(this.videoSetRightCamera, 'audioData.mat'), 'audioTrack2', 'Fs');
 
                 close(f);
                 this.audioSamplingFrequency = Fs;
             else
                 fprintf('>> Loading audio tracks from file\n');
                 tmp = load(a1);
-                this.audio1 = tmp.audioTrack1;
+                this.audioLeft = tmp.audioTrack1;
                 
                 tmp = load(a2);
-                this.audio2 = tmp.audioTrack2;
+                this.audioRight = tmp.audioTrack2;
                 this.audioSamplingFrequency = tmp.Fs;
             end
             
-            this.totalAudioSamples = min([length(this.audio1) length(this.audio2)]);
+            this.totalAudioSamples = min([length(this.audioLeft) length(this.audioRight)]);
 
             %% Find delay for video frames
             fprintf('>> Processing data ...\n');
@@ -332,8 +339,8 @@ classdef parSyncVideos
             D = NaN(N, 1);
             L = D; L_tilde = D; tau = D; F1 = D; F2 = D; lagTime = D;
 
-            A1 = this.audio1;
-            A2 = this.audio2;
+            A1 = this.audioLeft;
+            A2 = this.audioRight;
             
             tic;
             parpool(this.workers);
@@ -369,6 +376,8 @@ classdef parSyncVideos
                     % F2(1)= F1(1) - L_tilde(1) + 1 = 47 - 47 + 1 = 1;
                     F1(k) = L_tilde(k) + FPrime(k) - 1;
                     F2(k) = F1(k) - L_tilde(k) + 1;
+                elseif(isnan(D(k)))
+                    continue;
                 else
                     % Left video is delayed
                     % FPrime = 1; L_tilde(1) = -47; F1(1) = FPrime = 1; 
@@ -459,7 +468,7 @@ classdef parSyncVideos
 end
 
 %% Parameter validation
-function [videoSet1, videoSet2, mexopencvPath, videoFileExtension, ...
+function [videoSetLeftCamera, videoSetRightCamera, mexopencvPath, videoFileExtension, ...
     frameStep, audioWindowSize, workers] = validateAndParseInputs(varargin)
     % Validate and parse inputs
     narginchk(1, 9);
@@ -467,8 +476,8 @@ function [videoSet1, videoSet2, mexopencvPath, videoFileExtension, ...
     parser = inputParser;
     parser.CaseSensitive = false;    
 
-    parser.addRequired('videoSet1', @(x)validateattributes(x, {'char'}, {'nonempty'}));
-    parser.addRequired('videoSet2', @(x)validateattributes(x, {'char'}, {'nonempty'}));
+    parser.addRequired('videoSetLeftCamera', @(x)validateattributes(x, {'char'}, {'nonempty'}));
+    parser.addRequired('videoSetRightCamera', @(x)validateattributes(x, {'char'}, {'nonempty'}));
     parser.addRequired('mexopencvPath', @(x)validateattributes(x, {'char'}, {'nonempty'}));
     
     parser.addParameter('videoFileExtension', 'MP4', @(x)validateattributes(x, {'char'}, {}));
@@ -481,8 +490,8 @@ function [videoSet1, videoSet2, mexopencvPath, videoFileExtension, ...
     
     parser.parse(varargin{:});
 
-    videoSet1 = parser.Results.videoSet1;
-    videoSet2 = parser.Results.videoSet2;
+    videoSetLeftCamera = parser.Results.videoSetLeftCamera;
+    videoSetRightCamera = parser.Results.videoSetRightCamera;
     mexopencvPath = parser.Results.mexopencvPath;
     
     videoFileExtension = parser.Results.videoFileExtension;
