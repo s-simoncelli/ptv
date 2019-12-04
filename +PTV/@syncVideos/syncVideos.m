@@ -302,7 +302,7 @@ classdef syncVideos
             
             for FPrime=1:this.frameStep:this.totalSamples
                 tic;
-                leftTime = (this.totalSamples-FPrime)*timeTaken;
+                leftTime = (this.totalSamples/this.frameStep-FPrime)*timeTaken;
                 per = FPrime/this.totalSamples;
                 waitbar(per, w, sprintf('Getting delay for frame %d/%d (%.1f%%) - Left %.2f mins',...
                     FPrime, this.totalSamples, per*100, minutes(seconds(leftTime))));
