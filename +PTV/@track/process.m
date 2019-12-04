@@ -228,7 +228,7 @@ function [this] = process(this)
         this = this.cleanUp();
 
         %% Display
-        if(this.showVideoPlayers)
+        if(this.showVideoPlayers && ~this.GUI)
             this.displayTracks();
         end
 

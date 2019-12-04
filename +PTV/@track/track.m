@@ -484,9 +484,7 @@ classdef track
         [] = displayTracks(this);
         this = releaseSystem(this);
 
-        if(~this.noGUI)
-            this = progressWindow(this);
-        end
+        this = progressWindow(this);
     end
     
     methods(Static)
