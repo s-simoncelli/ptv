@@ -327,7 +327,7 @@ classdef parSyncVideos
             K = K(~I);
             FPrime = FPrime(~I);
             N = length(K);
-            
+
             % output variables
             D = NaN(N, 1);
             L = D; L_tilde = D; tau = D; F1 = D; F2 = D; lagTime = D;
