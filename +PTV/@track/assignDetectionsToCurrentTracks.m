@@ -24,9 +24,6 @@ function [this] = assignDetectionsToCurrentTracks(this)
     % these data.
     cost(cost > this.kalmanSettings.costOfNonAssignment) = Inf;
     
-    save(...
-        sprintf('/Volumes/PTV #2/2019_Stechin_zooflux/Cameras/deployment_1/test_assignement/data_%d.mat', this.step.counter),...
-        'cost');
     % This is faster than MATLAB's implementation
     % 'assignDetectionsToTracks'
     idx = this.munkres(cost);
