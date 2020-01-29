@@ -123,7 +123,8 @@ function [this] = initSystem(this)
     %% Status objects
     % Step object (see createNewTracks for the fields in 'tracks').
     this.step = struct('nextTrackId', 1, 'frameNumber', 0, 'time', 0, ...
-        'counter', 0, 'tracks', table, 'leftParticles', table, 'rightParticles', table);
+        'counter', 0, 'tracks', table, 'leftParticles', table, 'rightParticles', table, ...
+        'assignments', [], 'unassignedTracks', [], 'unassignedDetections', []);
     
     % System object
     this.system = [];
