@@ -53,7 +53,7 @@ function this = progressWindow(this)
         'Position', [0.03 0.7 1-0.03*2 0.3],...
         'FontSize', 14);
     labels = {'Step', 'Total tracks', 'Assigned tracks', 'Processing time', 'Left time'};
-    tags = {'Step', 'TotalTracks', , 'AssignedTracks', 'MeanTime', 'LeftTime'};
+    tags = {'Step', 'TotalTracks', 'AssignedTracks', 'MeanTime', 'LeftTime'};
 
     y = 0.86;
     for l=1:length(labels)
